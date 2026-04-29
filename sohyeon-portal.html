@@ -496,15 +496,6 @@
                     <p style="margin: 0; color: #2c3e50; font-weight: bold;" id="info-name"></p>
                     <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;" id="info-dates"></p>
                 </div>
-
-                <script>
-                    function showInfo(name, dates) {
-                        const infoBox = document.getElementById('info-box');
-                        document.getElementById('info-name').textContent = name;
-                        document.getElementById('info-dates').textContent = dates;
-                        infoBox.style.display = 'block';
-                    }
-                </script>
             </div>
 
         </div>
@@ -895,6 +886,16 @@
     </footer>
 
     <script>
+        // Global function for family tree info display
+        function showInfo(name, dates) {
+            const infoBox = document.getElementById('info-box');
+            if (infoBox) {
+                document.getElementById('info-name').textContent = name;
+                document.getElementById('info-dates').textContent = dates;
+                infoBox.style.display = 'block';
+            }
+        }
+
         function showPage(pageId) {
             // Hide all pages
             const pages = document.querySelectorAll('.page');
