@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>昭顯世子 · 仁祖大王實錄 - Shuyi Ma</title>
+<link href="style.css" rel="stylesheet"/>
+<!-- Leaflet CSS -->
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --bg-color: #fdfaf3;
+            --sidebar-bg: rgba(248, 246, 236, 0.95);
+            --accent-gold: #5a7a8c;
+            --accent-red: #5a7a8c;
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --border-color: #5a7a8c;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* OVERRIDE style.css constraints */
+        body {
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background-color: var(--bg-color) !important;
+            font-family: 'Georgia', 'Garamond', 'Times New Roman', serif !important;
+            line-height: 1.6 !important;
+            color: var(--text-main) !important;
+            box-shadow: none !important;
+            animation: none !important;
+            display: block !important;
+        }
+
+        /* Fix global nav for full-width */
+        nav {
+            margin: 0 !important;
+            width: 100% !important;
+            background-color: #2c3e50 !important;
+            padding: 15px 20px !important;
+            position: relative;
+            z-index: 2000;
+        }
+        nav a { font-size: 18px !important; margin: 0 25px !important; }
+
+        .page-layout { display: flex; min-height: calc(100vh - 60px); }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 420px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, rgba(248, 246, 236, 0.98) 0%, rgba(230, 240, 245, 0.98) 100%);
+            backdrop-filter: blur(12px);
+            border-right: 2px solid #5a7a8c;
+            position: sticky;
+            top: 0;
+            height: calc(100vh - 0px);
+            overflow-y: auto;
+            padding: 35px 0;
+            z-index: 1000;
+            transition: var(--transition);
+        }
+        .sidebar.collapsed { width: 80px; }
+
+        .sidebar-zh-title { font-family: 'Noto Serif TC', serif; font-size: 28px; color: var(--text-main); padding: 0 30px; margin-bottom: 8px; }
+        .sidebar-sub { padding: 0 30px; color: var(--accent-gold); font-size: 13px; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 35px; }
+        
+        .sidebar-toggle {
+            position: absolute; right: 20px; top: 30px; background: #fff; border: 1px solid var(--border-color); 
+            cursor: pointer; color: var(--text-main); width: 34px; height: 34px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition); z-index: 1100;
+        }
+        .sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); right: 23px; }
+
+        .search-container { padding: 0 30px 30px; }
+        .search-input {
+            width: 100%; padding: 12px 18px 12px 40px; border-radius: 25px; border: 1px solid var(--border-color);
+            background: white; font-size: 15px; transition: var(--transition);
+        }
+
+        .sidebar-section-label { padding: 0 30px 12px; font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+        .theme-grid { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 30px; margin-bottom: 30px; background: rgba(90, 122, 140, 0.08); padding: 20px 30px; border-radius: 8px; margin: 0 30px 30px; }
+        .pill {
+            padding: 8px 16px; border-radius: 20px; border: 2px solid #5a7a8c; background: transparent; color: #5a7a8c;
+            font-size: 13px; font-weight: 700; cursor: pointer; transition: var(--transition);
+        }
+        .pill.active { background: #5a7a8c; color: white; }
+
+        .period-nav-list { list-style: none; padding: 0; margin-bottom: 40px; }
+        .period-nav-list li button {
+            width: 100%; padding: 14px 30px; border: none; background: transparent; text-align: left; cursor: pointer;
+            transition: var(--transition); border-left: 5px solid transparent;
+        }
+        .period-nav-list li button.active { background: rgba(201, 162, 39, 0.1); border-left-color: var(--pc); }
+        .nav-year { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; display: block; }
+        .nav-event { font-size: 13px; color: var(--text-muted); }
+
+        .sidebar.collapsed .sidebar-zh-title, 
+        .sidebar.collapsed .sidebar-sub,
+        .sidebar.collapsed .search-container,
+        .sidebar.collapsed .sidebar-section-label,
+        .sidebar.collapsed .theme-grid,
+        .sidebar.collapsed .nav-year,
+        .sidebar.collapsed .nav-event { display: none; }
+
+        /* Main Area */
+        .main-area { flex: 1; padding: 60px 40px; max-width: 100%; margin: 0; min-width: 0; background: white; }
+        
+        .period-year-large { font-family: 'Playfair Display', serif; font-size: 72px; color: var(--period-color); line-height: 1; margin-bottom: 15px; }
+        .period-event-name { font-size: 32px; font-weight: 700; color: var(--text-main); }
+        .page-header h1 { margin-bottom: 8px; font-size: 42px; }
+        .page-subtitle { color: var(--accent-gold); font-size: 20px; font-style: italic; font-family: 'Noto Serif TC', serif; margin-bottom: 20px; }
+
+        /* Intro box */
+        .intro-box {
+            background: rgba(44,62,80,0.02); border-radius: 15px; padding: 45px; margin-bottom: 50px;
+            border: 1px solid #eee; font-size: 22px; line-height: 2; font-family: 'Noto Serif TC', serif;
+            color: #34495e; text-align: justify;
+        }
+
+        .intro-box p { margin-bottom: 15px; }
+        .intro-box p:last-child { margin-bottom: 0; }
+
+        .sillok-entry {
+            background: white; border-radius: 15px; padding: 40px; margin-bottom: 40px;
+            border: 1px solid #eee; border-left: 8px solid var(--entry-color); transition: var(--transition);
+        }
+        .sillok-entry:hover { box-shadow: var(--card-shadow); }
+
+        .entry-date { font-family: 'Noto Serif TC', serif; font-weight: 700; color: var(--accent-gold); font-size: 18px; margin-bottom: 20px; }
+        .entry-text { font-family: 'Noto Serif TC', serif; font-size: 24px; line-height: 1.9; color: var(--text-main); margin-bottom: 25px; text-align: justify; }
+
+        .translation-toggle { background: #fdfdfd; border-radius: 10px; padding: 15px; border: 1px solid #f0f0f0; margin-top: 20px; }
+        .translation-toggle summary { cursor: pointer; font-weight: 600; color: #888; font-size: 15px; }
+        .translation-text { padding: 15px 0 0; font-size: 18px; color: #444; line-height: 1.8; }
+        .entry-note { font-size: 16px; color: #999; font-style: italic; margin-top: 20px; border-top: 1px dashed #eee; padding-top: 15px; }
+        
+        .tag { font-size: 9px; background: #eee; padding: 2px 8px; border-radius: 4px; color: #666; margin-left: 5px; }
+
+        .bunjyo-map-wrapper { margin: 25px 0; border-radius: 12px; overflow: hidden; border: 1px solid #ddd; height: 350px; }
+        #bunjyo-map { height: 100%; width: 100%; }
+        #no-results { text-align: center; padding: 80px 0; color: #ccc; font-style: italic; }
+    </style>
+</head>
+<body>
+<div class="page-layout">
+<!-- ══ SIDEBAR ══════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+<button class="sidebar-toggle" id="toggle-btn" title="Toggle Sidebar">
+<svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><polyline points="15 18 9 12 15 6"></polyline></svg>
+</button>
+
+<div class="search-container">
+<div class="search-input-wrapper">
+<span class="search-icon">🔍</span>
+<input class="search-input" id="search-input" placeholder="全文檢索 (Search content...)" type="text"/>
+</div>
+</div>
+<div class="sidebar-section-label">主題 (Themes)</div>
+<div class="theme-grid" id="theme-filters">
+<button class="pill active" data-theme="all" style="--c:#2c3e50">全部 (All)</button>
+<button class="pill" data-theme="禮制" style="--c:#7d6608">禮制 (Rites)</button>
+<button class="pill" data-theme="論議" style="--c:#566573">論議 (Debate)</button>
+<button class="pill" data-theme="外交" style="--c:#1a5276">外交 (Diplomacy)</button>
+<button class="pill" data-theme="服制" style="--c:#6c3483">服制 (Mourning)</button>
+<button class="pill" data-theme="胡亂" style="--c:#922b21">胡亂 (Invasion)</button>
+<button class="pill" data-theme="入質" style="--c:#0e6655">入質 (Hostage)</button>
+<button class="pill" data-theme="在瀋" style="--c:#17a589">在瀋 (Shenyang)</button>
+<button class="pill" data-theme="薨逝" style="--c:#4a235a">薨逝 (Death)</button>
+<button class="pill" data-theme="身後事" style="--c:#424949">身後事 (Posthumous)</button>
+</div>
+<div class="sidebar-divider"></div>
+<div class="sidebar-section-label">人物 (Persons)</div>
+<div class="theme-grid" id="person-filters">
+<button class="pill active" data-person="all" style="--c:#2c3e50">全部 (All)</button>
+<button class="pill" data-person="李元翼" style="--c:#1f618d">李元翼</button>
+<button class="pill" data-person="尹昉" style="--c:#b03a2e">尹昉</button>
+<button class="pill" data-person="金瑬" style="--c:#117a65">金瑬</button>
+<button class="pill" data-person="崔鳴吉" style="--c:#9b59b6">崔鳴吉</button>
+<button class="pill" data-person="申欽" style="--c:#d35400">申欽</button>
+<button class="pill" data-person="李植" style="--c:#2e4053">李植</button>
+<button class="pill" data-person="李貴" style="--c:#1f618d">李貴</button>
+<button class="pill" data-person="洪瑞鳳" style="--c:#b03a2e">洪瑞鳳</button>
+<button class="pill" data-person="鄭經世" style="--c:#117a65">鄭經世</button>
+<button class="pill" data-person="李廷龜" style="--c:#9b59b6">李廷龜</button>
+<button class="pill" data-person="金堉" style="--c:#d35400">金堉</button>
+<button class="pill" data-person="李命俊" style="--c:#2e4053">李命俊</button>
+<button class="pill" data-person="鄭弘溟" style="--c:#1f618d">鄭弘溟</button>
+<button class="pill" data-person="金自點" style="--c:#b03a2e">金自點</button>
+<button class="pill" data-person="李曙" style="--c:#117a65">李曙</button>
+</div>
+<div class="sidebar-divider"></div>
+<div class="sidebar-section-label">時期 (Periods)</div>
+<ul class="period-nav-list">
+<li><button data-period="all" style="--pc:#2c3e50">
+<span class="nav-year">全部時期</span>
+</button></li><li><button class="active" data-period="1625" style="--pc:#c9a227">
+<span class="nav-year">1625</span>
+<span class="nav-event">冊封</span>
+</button></li><li><button data-period="1626" style="--pc:#ca6f1e">
+<span class="nav-year">1626</span>
+<span class="nav-event">迎接詔使</span>
+</button></li><li><button data-period="1627" style="--pc:#c0392b">
+<span class="nav-year">1627</span>
+<span class="nav-event">胡亂 · 嘉禮</span>
+</button></li><li><button data-period="1628" style="--pc:#d35400">
+<span class="nav-year">1628</span>
+<span class="nav-event">丁卯後遺事</span>
+</button></li>
+<li><button data-period="1637" style="--pc:#922b21">
+<span class="nav-year">1637</span>
+<span class="nav-event">丙子胡亂 · 入質</span>
+</button></li>
+<li><button data-period="1638" style="--pc:#17a589">
+<span class="nav-year">1638</span>
+<span class="nav-event">在瀋陽</span>
+</button></li>
+<li><button data-period="1645" style="--pc:#6c3483">
+<span class="nav-year">1645</span>
+<span class="nav-event">歸國 · 薨逝</span>
+</button></li>
+<li><button data-period="1646" style="--pc:#7b241c">
+<span class="nav-year">1646</span>
+<span class="nav-event">姜嬪之獄</span>
+</button></li>
+<li><button data-period="1647" style="--pc:#2c3e50">
+<span class="nav-year">1647</span>
+<span class="nav-event">三子流配</span>
+</button></li>
+<li><button data-period="附錄" style="--pc:#7f8c8d">
+<span class="nav-year">附錄</span>
+<span class="nav-event">傳記摘要</span>
+</button></li>
+</ul>
+</aside>
+<!-- ══ MAIN CONTENT ══════════════════════ -->
+<main class="main-area">
+<div class="page-header">
+<h1>昭顯世子 · 仁祖大王實錄</h1>
+<div class="page-subtitle">Selected passages from the <em>Annals of King Injo</em> concerning Crown Prince Sohyeon (昭顯世子, 1612–1645)</div>
+</div>
+<div class="intro-box">
+<p>昭顯世子（1612–1645），名□，字成之，朝鮮第十六代王仁祖之長子，元妃韓氏所出。仁祖三年（1625）冊立為王世子，時年十四歲。仁祖十五年（1637）丙子胡亂後，作為人質赴清朝瀋陽，滯留長達八年。仁祖二十三年（1645）春歸國，數月後薨逝於昌慶宮，年三十四，謚曰昭顯。</p>
+<p style="font-size:13px;color:#bbb;margin-bottom:10px;">In the Sillok, the Crown Prince is referred to as 王世子 or 世子 during his lifetime. The posthumous title 昭顯 was conferred in the fifth month of 仁祖 23年 (1645).</p>
+<div style="font-size:13px;color:#3a4a5a;background-color:#e8f1f7;padding:12px 16px;border-radius:6px;border:1px solid #5a7a8c;">
+<strong>🤖 關於白話文翻譯與英文摘要的說明 (AI-Generated Content Notice)</strong><br/>
+                    為了方便閱讀，本頁面中所有的<strong>白話文翻譯</strong>與<strong>英文 Summary</strong> 均由 <strong>Gemini 3.1 Pro AI 模型</strong> 總結與翻譯生成。古文原文則完全摘自《朝鮮王朝實錄》，未經修改。
+                </div>
+</div>
+<div class="no-results" id="no-results">目前篩選條件下無符合條目。</div>
+<!-- 1625 -->
+<!-- 1626–28 -->
+<!-- 1627 -->
+<!-- 1637 -->
+<!-- 1628 -->
+<!-- 1627 -->
+<!-- 1626 -->
+<!-- 1625 -->
+<div class="period-section" data-period="1625" style="--period-color:#c9a227;">
+<div class="period-section-header">
+<div class="period-year-large">1625</div>
+<div class="period-event-name">冊封</div>
+<div class="period-vol-label">卷八 · 仁祖三年</div>
+<div class="period-subtitle">The formal investiture of the Crown Prince and related diplomatic considerations</div>
+</div>
+
+
+<div class="sillok-entry" data-persons="李元翼 尹昉 金瑬 李植 鄭經世 李廷龜" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖三年 正月 · 東宮 官員 任命 (卷八)</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">以金瑬為吏曹判書，南道兵使申景瑗為北道兵使，尹暄為兵曹參判，李元翼為世子師，尹昉為世子傅，李廷龜為左賓客，吳允謙為右賓客，鄭曄為左副賓客，鄭經世為右副賓客，李植為輔德，鄭百昌為弼善，姜碩期為兼司書，俞伯曾為兼文學，金光炫為司書，沈之源為兼說書，李楘為執義，鄭宗溟為檢詳。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">任命金瑬為吏曹判書，南道兵馬使申景瑗為北道兵馬使，尹暄為兵曹參判，李元翼為世子師，尹昉為世子傅，李廷龜為左賓客，吳允謙為右賓客，鄭曄為左副賓客，鄭經世為右副賓客，李植為輔德，鄭百昌為弼善，姜碩期為兼司書，俞伯曾為兼文學，金光炫為司書，沈之源為兼說書，李楘為執義，鄭宗溟為檢詳。</div>
+</details>
+<div class="entry-note">Officials appointed to the Crown Prince's household and education staff.</div>
+</div>
+<div class="sillok-entry" data-persons="李植" data-themes="論議" style="--entry-color:#566573">
+<div class="entry-meta">
+<div class="entry-date">仁祖三年 · 史臣 按語</div>
+<div class="entry-tags"><span class="tag" style="--c:#566573">論議</span></div>
+</div>
+<div class="entry-text">李植、鄭百昌之文學，當今罕儔，而至於輔導世子，皆以親屬為之，則未免偏係之私。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">史官評論：李植與鄭百昌的文學造詣，在當今世上難有匹敵，但說到輔導世子的重任，卻都任用了親屬，這未免有偏袒私人的嫌疑。</div>
+</details>
+<div class="entry-note">The historian notes that while Li Sik and Jeong Baek-chang are exceptional scholars, their appointment as the Crown Prince's tutors, given their family relations, cannot escape the suspicion of partiality.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖三年 正月 丙子日 · 冊封</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">丙子冊封元子為王世子，年十四歲也。上出御隆政殿，命近臣宣教，命又授竹冊。教命文曰：宗儲主鬯，所以順天經，貳極定名，所以固國本，須位序之早正，宜典冊之極崇。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">丙子日，冊封元子為王世子，當時世子年僅十四歲。仁祖大王親自駕臨隆政殿，命令近臣宣讀教旨，並授予竹冊。教命文中寫道：宗廟儲君主管祭祀，是為了順應上天常道；確立皇儲的名分位次，是為了鞏固國家的根本。必須儘早端正位次順序，理應給予最為崇高的典禮與冊封文書。</div>
+</details>
+<div class="entry-note">The formal investiture of the fourteen-year-old eldest son as Crown Prince.</div>
+</div>
+<div class="sillok-entry" data-persons="尹昉 鄭經世 李廷龜" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖三年 正月 丁丑日 · 賀冊禮成</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">丁丑上御隆政殿，受群臣賀，蓋賀王世子冊禮成也。左議政尹昉等率百官進箋，卽日宣教大赦。上下教曰："世子師傅吳允謙、鄭曄、鄭經世及百官加親授。李廷龜族屬中六品遷轉。"廷龜已至輔國階，故有是命。師傅，元子時師傅也。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">丁丑日，仁祖大王御臨隆政殿，接受群臣的祝賀，這是為了慶祝王世子冊封禮圓滿完成。左議政尹昉等人帶領百官進獻賀箋，當天即下達教旨大赦天下。大王下達教命說：「世子的師傅吳允謙、鄭曄、鄭經世以及百官均給予親自授職的恩典。李廷龜的親屬中凡任六品職務者均予以遷轉升職。」由於李廷龜當時已達到輔國階的極高官階，所以才下達此特命嘉獎其親屬。此處所提到的師傅，是指世子尚為元子時期的教導官員。</div>
+</details>
+<div class="entry-note">The King received congratulations for the completion of the Crown Prince's investiture ceremony.</div>
+</div>
+<div class="sillok-entry" data-persons="洪瑞鳳 金堉" data-themes="論議" style="--entry-color:#566573">
+<div class="entry-meta">
+<div class="entry-date">仁祖三年 正月 乙未日 · 憲府及持平金堉啓</div>
+<div class="entry-tags"><span class="tag" style="--c:#566573">論議</span></div>
+</div>
+<div class="entry-text">憲府啓曰："春坊之官，極一時之選，居講筵者，固無踰於鄭百昌。今世子富於春秋，師道在嚴，前日筵臣之陳啓者，有意存焉，請遞鄭百昌兼輔德之任。"答曰："鄭百昌固不合於講官。爾等所謂有意存焉者，是誠何心也？予不識爾等之意，故不卽允從，大抵臺官，不當如是碌碌也。"
+○乙未持平金堉啓曰："昨論鄭百昌之事者，非有他意，只為百昌親暱於世子，而世子富於春秋，殿下之所以教導者，當示以至公無私之道。豈無他人，而使百昌兼任，使世子習知親私之可親、疏遠之可疏哉？且親私則不嚴，疏遠則生敬，開講之際，損益可知也。不然則以百昌名望，出入三司，踐歷華貫，其誰曰不可於此也。頃日筵臣之陳啓者，亦有見乎此，其意實在防微之遠慮，而未浹數旬，旋入講院。故臣發言於僚席，請遞其任，而措語之際，未能明白。殿下之不卽允從，出於不識其意而然也。反示未安之意，折之以碌碌之教者何哉？殿下之輕蔑臺臣，厭聞忠言，不啻詑詑之色，雖有古之遺直，孰肯為殿下盡言哉？緣臣措語之失，致有聖德之累，臣之罪戾，誠出自作，決不可仍冒，請罷斥臣職。"大司憲洪瑞鳳、掌令尹衡彥·李如璜亦以此引避，玉堂處置請出。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">憲府啟奏道：「春坊（侍講院）的官員應是當世最優秀的人選，在講筵中任職的人，固然沒有能超過鄭百昌的。但如今年幼的世子正處於成長時期，為師之道在於嚴謹，前些日子筵臣所陳述的內容，實有深意存焉，請求免去鄭百昌兼任輔德的職務。」大王回答：「鄭百昌固然不適合擔任講官。但你們所謂的『有深意存焉』，到底是存著什麼心思？我不明白你們的意思，所以不能立即允從。大抵擔任臺官的人，不應當如此庸碌無能。」<br/><br/>乙未日，持平金堉啟奏道：「昨日談論鄭百昌的事情，並非有其他私意，只是因為鄭百昌與世子關係親近，而世子年紀尚輕，殿下在教導世子時，應當展示大公無私的道理。難道沒有其他人選，一定要讓鄭百昌兼任職務，讓世子習以為常地認為親近私屬就是可以親近，疏遠者就是可以疏遠的嗎？而且親近則教育不嚴，疏遠則能產生敬畏，在開講之際，其中的損益是可以預見的。否則以鄭百昌的名望，出入三司，歷任要職，誰會說他不適合呢？前些日子筵臣的陳啟，也是看到了這一點，其本意實在於防微杜漸的長遠考慮，然而不到幾十天，他又回到了講院。因此臣在同僚會議上發言，請求調換他的職務，但在措辭之際未能表達得非常明白。殿下之所以沒有立即允准，是因為不了解其中深意而導致的。但殿下反而表現出不安的情緒，並以『碌碌無為』的訓誡來折辱我們，這是為何呢？殿下輕視臺臣，厭惡聽取忠言，表現出傲慢的神色，即便有古代那樣正直的人，誰還願意為殿下盡言呢？由於臣措辭的失誤，導致聖德受累，臣的罪過誠然是自作自受，絕不敢繼續留任，請求罷免臣的職務。」大司憲洪瑞鳳、掌令尹衡彥、李如璜也因此請求辭職引避，弘文館也請求對此事進行處置。</div>
+</details>
+<div class="entry-note">The Censorate argued that Jeong Baek-chang's close relationship with the Prince would undermine the strictness required in education.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="外交" style="--entry-color:#1a5276">
+<div class="entry-meta">
+<div class="entry-date">仁祖三年 正月 丁未日 · 禮曹 啓</div>
+<div class="entry-tags"><span class="tag" style="--c:#1a5276">外交</span></div>
+</div>
+<div class="entry-text">丁未禮曹啓曰："王世子冊封事，當據例奏請，別遣使臣，或順付於謝恩使、或冬至·聖節使，議大臣以定何如？"答曰："世子冊封，據例奏請，未為不可。但兩天使纔過，而繼有詔使之行，則赤立之民，決難支堪，徐待後日，更觀民力而處之可也。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">丁未日，禮曹啟奏道：「關於王世子冊封的事情，應當根據慣例向天朝（大明）奏請，是另外派遣專門的使臣，還是順便委託給謝恩使，或者是冬至使、聖節使，請交由大臣商議後定奪。」大王回答：「冊封世子並按例奏請，並非不可以。但兩批使者才剛離開，緊接著又有迎接詔使的行程，百姓民力已竭，實在難以支撐負擔。姑且等待日後，再觀察民力的恢復情況來處理吧。」</div>
+</details>
+<div class="entry-note">The Ministry of Rites proposed notifying Ming of the investiture, but Injo delayed it due to economic concerns.</div>
+</div>
+<div class="sillok-entry" data-persons="尹昉" data-themes="論議 外交" style="--entry-color:#566573">
+<div class="entry-meta">
+<div class="entry-date">仁祖三年 · 領事 尹昉 啓</div>
+<div class="entry-tags"><span class="tag" style="--c:#566573">論議</span><span class="tag" style="--c:#1a5276">外交</span></div>
+</div>
+<div class="entry-text">領事尹昉曰："臣再侍王世子於冊禮之後，則世子岐嶷夙成，講學之際，深解旨義，誠一國臣民之慶、祖宗社稷之福也。冊封奏請，不可遲緩，臣等欲付謝恩使之行，自上以民弊為慮，不卽允從。臣等之意，不如從速奏聞。"上曰："此非急急之事，今番接待詔使，亦恐民力之難堪。況年年酬應詔使，則何以為國乎？姑待後日。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">領事尹昉啟奏道：「臣在冊封禮完成後兩次侍奉王世子，發現世子聰穎早熟，在講學之時能深刻理解其中旨意，這真是一國臣民的慶幸，也是祖宗社稷的福氣。冊封奏請的事情不可遲緩，臣等本想將此事託付給謝恩使的行程，但皇上以體恤民生艱辛為念，沒有立即允准。臣等的意見是，不如盡快奏聞天朝。」大王說：「這並非急迫之事，這次接待詔使，我也擔心百姓財力難以負擔。更何況如果年年都要應酬詔使，那還如何治理國家呢？姑且等待以後再說。」</div>
+</details>
+<div class="entry-note">Yun Bang praised the Crown Prince's intellect and urged diplomatic notification, but Injo prioritized the people's welfare.</div>
+</div>
+<div class="sillok-entry" data-persons="李廷龜" data-themes="論議" style="--entry-color:#566573">
+<div class="entry-meta">
+<div class="entry-date">仁祖三年 · 李廷龜 啓 (郊外擧動)</div>
+<div class="entry-tags"><span class="tag" style="--c:#566573">論議</span></div>
+</div>
+<div class="entry-text">廷龜曰："郊外擧動，例有王世子隨駕之事，至於謁聖祭享之時，亦有此規，而但今世子沖年務學，寸陰可惜，至於觀武才等事，尤不宜隨駕。"上曰："卿言甚當，何必隨往乎？"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">李廷龜啟奏道：「按照慣例，國王出行至郊外時，通常會有王世子隨駕。至於謁聖（祭拜孔子）或進行祭享禮時，也有這樣的規矩。但如今世子正處於年少求學之期，應當珍惜寸陰，至於觀看武藝比賽等事情，尤其不適合讓世子隨駕前往。」大王回答：「卿說得很對，何必一定要隨行呢？」</div>
+</details>
+<div class="entry-note">Li Jeong-gwi advised that while protocol required the young Prince to accompany the King on outings, attending military displays was an unnecessary distraction from his studies.</div>
+</div>
+<div class="sillok-entry" data-persons="李貴" data-themes="論議" style="--entry-color:#566573">
+<div class="entry-meta">
+<div class="entry-date">仁祖三年 癸酉日 · 世子 召見 李貴</div>
+<div class="entry-tags"><span class="tag" style="--c:#566573">論議</span></div>
+</div>
+<div class="entry-text">癸酉王世子召見延平府院君李貴於景賢堂。蓋李貴曾以請對世子之意，屢陳上前，故至是上使世子召見。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">癸酉日，王世子在景賢堂召見了延平府院君李貴。這是因為李貴此前多次向國王陳述想要與世子見面的意願，因此大王才命世子予以召見。</div>
+</details>
+<div class="entry-note">The Crown Prince received Yi Gwi at Gyeonghyeon Hall, following Yi Gwi's repeated requests to the King for an audience with the Prince.</div>
+</div>
+<div class="sillok-entry" data-persons="李元翼" data-themes="論議" style="--entry-color:#566573">
+<div class="entry-meta">
+<div class="entry-date">仁祖三年 卷十 · 世子 見 李元翼</div>
+<div class="entry-tags"><span class="tag" style="--c:#566573">論議</span></div>
+</div>
+<div class="entry-text">上曰："世子欲見卿，卿出去時，暫見可也。"元翼退出。世子見元翼曰："久不相見，常切戀思。今也出仕，喜幸極矣。"元翼曰："邸下春秋方盛，十分勉學幸甚。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">大王對李元翼說：「世子想要見卿，卿在退朝出去時，可以順便去見他一下。」李元翼退下後，世子見到李元翼並說道：「許久未見，常切思戀。今日見卿出仕任職，真是非常高興與慶幸。」李元翼回答：「邸下正值年富力強、求學上進之時，若能十分勉勵學習，則是一件極大的幸事。」</div>
+</details>
+<div class="entry-note">The Crown Prince warmly greeted his tutor Li Wonyik upon the latter's return to service, and Li Wonyik urged diligent study.</div>
+</div>
+</div><div class="period-section" data-period="1626" style="--period-color:#ca6f1e; display: none;">
+<div class="period-section-header">
+<div class="period-year-large">1626</div>
+<div class="period-event-name">服制 · 保傅 · 明使</div>
+<div class="period-vol-label">仁祖四年</div>
+<div class="period-subtitle">Mourning attire debates, Crown Prince's education, and Ming envoy reception</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="論議" style="--entry-color:#566573">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 卷十一 戊戌日 · 侍講院 啓 (停講後開筵)</div>
+<div class="entry-tags"><span class="tag" style="--c:#566573">論議</span></div>
+</div>
+<div class="entry-text">戊戌侍講院啓曰："王世子以侍病，自歲前停講，終值大慼，迄未開筵。沖年講學，寸陰可惜，而廢講之久，殆至三箇月，事極可悶。揆以《禮經》，未葬讀喪禮之義，則卒哭前專廢講業，似未妥當。會講、朝講，雖不可爲，常時開筵，不可久停，而前受《大學》、《小學》，實與《禮經》無異。來月爲始，開筵何如？師傅之意如此，敢啓。"從之。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">戊戌日，侍講院啟奏道：「王世子因為侍奉父王病痛，從歲前就停止了講學，後來又遇到了重大的國喪，至今仍未開啟講筵。世子年少求學，寸陰可惜，而廢止講學已久，幾乎快三個月了，這件事非常令人憂慮。對照《禮經》，雖然有未下葬前應研讀喪禮的教義，但在卒哭禮之前完全廢止講業，似乎不太妥當。大講、朝講雖然不便進行，但平時的書筵（講課）不宜久停，且之前學過的《大學》、《小學》，其實與《禮經》的道理並無二致。請求從下個月開始恢復講筵，如何？師傅們的意見也是如此，故敢啟奏。」大王同意了。</div>
+</details>
+<div class="entry-note">The Royal Tutorial Office requested resumption of lectures for the Prince, arguing that the three-month suspension during mourning was excessive given his young age and scholarly needs.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="服制" style="--entry-color:#6c3483">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 庚子日 · 下教 (世子服色)</div>
+<div class="entry-tags"><span class="tag" style="--c:#6c3483">服制</span></div>
+</div>
+<div class="entry-text">庚子下教曰："世子服色，卒哭前以白袍磨鍊，今以淺淡服磨鍊，何前後不同如是耶？内官以下及講官變服，亦無是理，此單子還爲出給，使之改磨鍊。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">庚子日，大王下達教命說：「關於世子的喪服顏色，在卒哭禮之前本來定為白袍，現在卻改為淺淡服（淺色喪服）來處理，為什麼前後如此不同呢？內官以下以及講官改變服飾，也是沒有道理的。將這份公文退回，讓相關部門重新釐定。」</div>
+</details>
+<div class="entry-note">The King rebuked inconsistent rulings on the Crown Prince's mourning attire, ordering the documents reissued with uniform instructions.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="服制" style="--entry-color:#6c3483">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 · 禮曹 啓 (世子服色議)</div>
+<div class="entry-tags"><span class="tag" style="--c:#6c3483">服制</span></div>
+</div>
+<div class="entry-text">禮曹啓曰："王世子之服，初喪雖以不杖期磨鍊，而《五禮儀》服制條：'殿下及王世子，無期年服'云。此蓋《禮經》所謂期喪絶於諸侯之意，而王世子名位已定，喪制降殺之節，當與殿下一體故也。殿下之期服，則自三年降，雖不可又降，王世子之服，則似當有降。臣等久欲仰稟定奪，而成服之後，不敢追請矣。殿下之服杖期，實非正禮，而迫於至情，寧失於厚。王世子之服，擬此不降，亦或一道，故欲於卒哭後，變除之節啓請，次次稍降服色矣。王世子卒哭前進見時，雖以白衣、黑角帶，而書筵之服，則當初不爲磨鍊。王世子書筵，卽自上視事也。自上卒哭前視事，服旣以白袍，則王世子書筵之服，當降爲淺淡服矣。至於内官以下之服，大殿、中宮殿内官以下，則雖當從服，王世子所屬内官以下，則初喪遑遑中，泛然一樣磨鍊，而卒哭後，當啓請變降，故今於書筵時，王世子旣服淺淡服，陪從之官，當從王世子之服，故如是磨鍊矣。然臣等不敢擅便，議大臣定奪何如？"答曰："《五禮儀》爲外祖父母、王妃父母之喪，有擧哀、進衰服之文。以此觀之，則其不載變禮明矣。予本無知識，未知啓辭之意，出於何經，以淺見論之，則世子之服，似當有降之説，似乎無據矣。今此書筵，實涉未安，而出於不得已也。期服，服之重者，卒哭前服淺淡服，不亦未安乎？若以白袍爲不可，則姑停書筵可矣。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">禮曹就王世子喪服問題詳加議論，援引《五禮儀》「殿下及王世子無期年服」之文，認為世子之服應有所降殺。君王則認為期服較重，卒哭前即服淺淡服似有未安，若不可用白袍，則姑停書筵。</div>
+</details>
+<div class="entry-note">An extensive exchange on the proper mourning attire for the Crown Prince during tutorial sessions, with the Ministry of Rites citing Korean and Ming precedents for a lighter grade.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="服制" style="--entry-color:#6c3483">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 卷十二 · 大臣 回覆 (書筵服色)</div>
+<div class="entry-tags"><span class="tag" style="--c:#6c3483">服制</span></div>
+</div>
+<div class="entry-text">至於書筵服色，欲以淺淡者，《五禮儀》："殿下及王世子爲外祖父母服，麤布帶五日而除，王世子以下之喪，只擧哀而無服。"此卽《禮經》所謂諸侯絶期之意，而王世子名位一樣故也。帝王服制，本與士大夫不同。况莫重者，三年之喪，而殿下猶且爲宗統，而降服，則王世子之服，亦安得不降於變除之節乎？王世子之期服，與殿下之期服，自有輕重。殿下卒哭前視事，旣以白袍，則王世子書筵、視事，當用淺淡服，卒哭後服色，亦當次次稍降。適因下問，敢陳曲折，非敢以己意斷定，而措語未瑩，不能達意。伏承聖教，惶隕戰灼。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">關於書筵的服飾，之所以想用淺淡服，是因為《五禮儀》中記載：『殿下及王世子為外祖父母服喪，五天之後便除去粗布帶，而王世子以下之喪，只舉哀而不用服喪。』這就是《禮經》所說的諸侯絕期（諸侯不服一年期喪）的意思，因為王世子與國王的名分地位是一樣的。帝王的服制，本來就與士大夫不同。更何況最重的是三年之喪，殿下尚且為了宗法繼承而降服，那麼王世子的喪服，在改變除服的節次時，又怎能不降等呢？王世子的期服（一年喪）與殿下的期服，自然有輕重之別。殿下在卒哭前視事既然穿白袍，那麼王世子在書筵及視事時，應當使用淺淡服，卒哭後的服色也應當逐步降低。剛好遇到大王垂詢，故敢陳述其中曲折，並非敢以己意斷定。若措辭不夠清晰，未能準確表達意思，臣感到惶恐不安、戰戰兢兢。</div>
+</details>
+<div class="entry-note">A minister elaborated the rationale for lighter mourning attire for the Crown Prince, citing imperial precedent and the hierarchy of mourning grades.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="服制" style="--entry-color:#6c3483">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 辛亥日 · 諫院 啓 (書筵服色)</div>
+<div class="entry-tags"><span class="tag" style="--c:#6c3483">服制</span></div>
+</div>
+<div class="entry-text">辛亥諫院啓曰："王世子書筵服色，該曹以淺淡服稟定，而自上以爲不可，至降嚴教，臣等未曉聖意之所在也。世子本服，只是期喪。常時士大夫之期服者，惟在喪次時，着衰服，宴居出入，則布帶素衣，至於公會，則純用吉服。况帝王家持服之制，自與臣庶不同，而世子之開筵臨講，猶殿下之視事也。殿下視事之服，尚用白袍，則世子書筵服色，自當與進見時有間。然則該曹所定淺淡服，有或過而無或不及也。沖年講學，一日爲急，請依該曹所定，以淺淡服，從速開筵，卒哭後更令該曹，次第磨鍊。"答曰："世子之服，雖是期喪，方在喪側，用淺淡服，似乎未安矣。"連啓，乃從之。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">辛亥日，諫院啟奏道：「王世子的書筵服飾，該曹（禮曹）已按淺淡服稟報定奪，但皇上認為不可以，甚至下達了嚴厲的教命，臣等不明白聖意的所在。世子本來的服制只是期喪（一年喪）。平時士大夫服期喪時，只有在喪位上時才穿衰服，平時居家或出入時則穿布帶素衣，至於參加公務集會，則純粹使用吉服（正式禮服）。更何況帝王家持服的制度，自然與臣民百姓不同，而世子開筵臨講，就如同殿下視事一般。殿下視事時尚且穿白袍，那麼世子在書筵時的服飾，自然應當與進見大王時有所區別。既然如此，該曹所定的淺淡服，可能還嫌過重，絕不會不足。世子年少求學，一日都不能耽誤，請求依據該曹所定的淺淡服，盡快開啟講筵，卒哭禮之後再命令該曹逐步釐定後續服飾。」大王回答：「世子的喪服雖然是期喪，但目前還在守喪期間，穿淺淡服似乎有所不安。」經過諫院連番啟奏，大王最終同意了。</div>
+</details>
+<div class="entry-note">The Office of Remonstrance repeatedly petitioned for the Crown Prince to wear lighter attire at tutorials; the King initially refused but ultimately acquiesced.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="外交" style="--entry-color:#1a5276">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 甲子日 · 禮曹 啓 (天使入京接見)</div>
+<div class="entry-tags"><span class="tag" style="--c:#1a5276">外交</span></div>
+</div>
+<div class="entry-text">甲子禮曹啓曰："天使入京，則王世子似當有接見之禮，儀注節目，令該曹講定矣。王世子受册命於天朝之後，則迎詔及宴享，俱當出參，又當有别行請宴之禮矣。今則時未受册於天朝，似難依例接見，但天使若或聞知而請見，則不可不見，冠服及服色，議大臣，預爲講定宜當。"答曰："知道。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">甲子日，禮曹啟奏道：「大明天使入京，王世子理應有接見之禮，儀規程序已命令該曹（禮曹）商定。王世子在接受天朝（大明）冊封命之後，迎詔以及參加宴享都應當出席，且還應當有另外舉行請宴的禮節。但如今世子尚未受到天朝冊封，似乎難以依據慣例進行正式接見。然而天使如果聽聞此事而請求見面，則不可不見。關於冠服及衣服顏色，請交由大臣商議並預先商定為宜。」大王回答：「知道了。」</div>
+</details>
+<div class="entry-note">The Ministry of Rites raised the procedural question of whether the Crown Prince, not yet officially invested by the Ming court, should formally receive the Ming envoy.</div>
+</div>
+<div class="sillok-entry" data-persons="金瑬" data-themes="外交" style="--entry-color:#1a5276">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 · 遠接使 金瑬 馳啓</div>
+<div class="entry-tags"><span class="tag" style="--c:#1a5276">外交</span></div>
+</div>
+<div class="entry-text">遠接使金瑬馳啓曰："譯官張禮忠隨問安使見正使，則自上禮單，只點受黃毛筆十枚，餘皆還給，副使亦然。正使則容貌、辭氣，極其端的，副使肥胖嚴峻，性頗苛細云。正使問曰：'國王拜帖，何用藍籤？'禮忠答曰：'國王於本年正月，丁生母憂矣。'正使曰：'是則爾國私喪。今此詔敕，乃聖天子莫大之慶，何其不知禮，如是之甚也？此後藍籤帖子，俺斷不受，爾等可傳語遠接陪臣，後勿如是。'禮忠等答曰：'小邦粗知禮義，國王迎詔敕時，例用吉服，而與老爺相會之時，則方在哀疚之中，當用素服。拜帖用藍籤，亦其禮也。'正使答曰：'俺以不受藍籤之意，說與爾們，明日不須更言'云。"政院請改用紅籤，從之。○夜，坤方、東方，有氣如火光。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">遠接使金瑬火速啟奏道：「譯官張禮忠跟隨問安使去見正使，國王所送的禮單中，兩位使臣只點收了十支黃毛筆，其餘全部退還。正使的容貌與說話語氣非常端正莊重；副使則身材肥胖且神情嚴峻，性格頗為苛刻細碎。正使問道：『國王的拜帖（名帖）為何要用藍色籤條？』張禮忠回答說：『國王在今年正月剛遭遇了生母的喪事（丁憂）。』正使說：『那是你們國家的私喪。如今這份詔敕是當今聖天子莫大的喜慶之事，你們竟然如此不懂禮數，簡直太過分了。此後藍色籤條的帖子我絕不接受，你們可以轉告遠接陪臣，以後不要再這樣做了。』張禮忠等人回答說：『小邦（朝鮮）也略知禮義。國王在迎接詔敕時依照慣例穿吉服（禮服），但在與老爺（使臣）相會時，因為正處於哀悼期，應當使用素服（喪服）。拜帖用藍籤也是符合禮數的。』正使回答說：『我已經把不收藍籤的意思告訴你們了，明天不必再多言。』」於是政院請求改用紅色籤條，大王同意了。</div>
+</details>
+<div class="entry-note">The Ming envoy objected to the blue-bordered mourning documents used by the Korean King, arguing it was improper given the celebratory occasion of an imperial edict.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 丁卯日 · 上幸 魂宮 (世子亞獻)</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">丁卯上幸魂宮，行别祭。上行初獻，世子行亞獻。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">丁卯日，大王駕臨魂宮（供奉亡者靈位的場所），舉行別祭之禮。大王親自主持初獻（第一次獻酒），王世子則主持亞獻（第二次獻酒）。</div>
+</details>
+<div class="entry-note">The King and Crown Prince jointly performed a special memorial rite at the spirit hall, with the Prince taking the role of second offerer.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="服制" style="--entry-color:#6c3483">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 · 禮曹 啓 (卒哭後服色)</div>
+<div class="entry-tags"><span class="tag" style="--c:#6c3483">服制</span></div>
+</div>
+<div class="entry-text">禮曹啓曰："卒哭後，王世子進見大妃殿時及書筵時，以無揚赤色黑衣啓下。天使入京日，自上出宮時，王世子當有袛送、袛迎節次。出宮時自上若白袍，則世子當爲淺淡服矣；迎詔還宮時，自上吉服，則世子亦當吉服袛迎。以此磨鍊何如？"從之。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">禮曹啟奏道：「卒哭禮之後，王世子進見大妃殿以及在書筵時，已下達教命定為穿不帶紅色的黑衣。天使入京當天，大王出宮時，王世子理應有送行與迎接的程序。出宮時若大王穿白袍，則世子應當穿淺淡服；迎接詔書還宮時，若大王穿吉服，則世子也應當穿吉服迎接。以此方案釐定，如何？」大王同意了。</div>
+</details>
+<div class="entry-note">The Ministry of Rites finalized the Crown Prince's attire for different occasions — lighter mourning for tutorials, formal dress for receiving the Ming envoy.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 · 禮曹 啓 (正位三年)</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">庚午禮曹啓曰："王世子正位東宮，今已三年，尚未受冊命於天朝。臣曹據例啓請，而適值兩瑞之行，公私物力掃盡，聖上軫念民生，遂從姑待後年之議，以至於今。竊念莫大應行之典，因此稽遲，豈非未安之甚乎？詔使若問：'既已冊封，而何不奏請？'云，則可以物力為辭乎？今於謝恩使之行，送請封奏文，則此是例典，必無持難之事，請令大臣定奪。"答曰："啓辭甚是。但如此蕩竭之時，詔使連三年出來，則民力極難支堪。更待後日奏請，勿為重困吾民。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">庚午日，禮曹啟奏道：「王世子正式確立名位已過三年，但至今尚未獲得天朝（大明）的冊封命。臣曹（禮曹）曾多次依例啟奏請求，但恰逢兩次接待瑞使的行程，公私物資財力已消耗殆盡，聖上體恤民生艱困，於是聽從了延後至明年的建議，一直拖延至今。臣竊以為如此重大的典禮因故稽延，實在令人深感不安。若詔使（明使）問起：『既然已經冊封，為何不向天朝奏請？』難道能以物力不足為辭嗎？現在趁著謝恩使出發之際，順便送交請求冊封的奏文，這是例行典禮，應該不會有阻礙。請命大臣定奪。」大王回答：「啟辭說得很對。但在國庫如此蕩然無存之時，詔使連續三年來到，民力實在難以支撐。還是等待日後再奏請吧，不要再讓我的人民陷入重困。」</div>
+</details>
+<div class="entry-note">The Ministry of Rites urged requesting formal Ming recognition for the Prince, but Injo again refused to avoid the financial burden of hosting envoys.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="論議" style="--entry-color:#566573">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 · 憲府、諫院 合啓 (奏請)</div>
+<div class="entry-tags"><span class="tag" style="--c:#566573">論議</span></div>
+</div>
+<div class="entry-text">○憲府、諫院合啓曰："自古有天下國家者，必首建儲貳者，乃所以固本繫望，而基不拔之勢也。世子受冊經年，名位已定，而久稽封典之降，人心鬱抑，願望益切。殿下雖軫念赤子之重困，欲待後日，而為宗廟、社稷之計，寧可以民弊，而少緩大事乎？頃日有司之請，實出於群情之所同然，請依該曹陳啓，速為奏請，以慰臣民之望。"答曰："有民然後，有國家。百姓離散，誰與為國乎？奏請雖重，民力亦不可不顧。爾等退而思之，勿為更煩。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">司憲府與司諫院聯合啟奏道：「自古以來，擁有天下國家的君主必定首重確立儲君（世子），這是為了鞏固國本、連繫百姓的期望，並以此奠定不可動搖的基石。世子受冊封已歷經數年，名分地位已經確定，但天朝冊命的封典久久未降，人心鬱悶壓抑，期望日益急切。殿下雖然體恤百姓的沉重負擔，想要等待日後，但為了宗廟社稷的長遠計慮，豈能因為民生艱辛而稍緩這件大事呢？前幾日有關部門的請求，實則是群眾情理之所趨，請求依據禮曹的啟奏，盡快向天朝奏請冊封，以安慰臣民的期望。」大王回答：「有了百姓才有國家，如果百姓都離散了，誰來組成國家呢？奏請雖然重要，但民力也不可不顧。你們退下後再思考一下，不要再多言煩擾。」</div>
+</details>
+<div class="entry-note">The Censorate jointly argued that the Prince's formal investiture was a national priority, but Injo maintained that the people's survival came first.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="外交" style="--entry-color:#1a5276">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 四月 · 迎接都監 啓</div>
+<div class="entry-tags"><span class="tag" style="--c:#1a5276">外交</span></div>
+</div>
+<div class="entry-text">迎接都監啓曰："世子接見當否，問于館伴、大臣以啓事，傳教矣。天使要見王世子，在道中亦屢言之。今日詣闕時，欲仍與王世子相會，臣令譯官，告之以'國王前同會則坐次非便。老爺若欲見之，世子當於閑日來拜'云，則天使曰：'俺之欲往見，禮也；世子之來拜，亦禮也'云。其意蓋欲世子來拜也。以此觀之則要見，非文具也，其欲先為往見，乃文具之言也。世子若送拜帖請拜，則彼必喜之矣。"答曰："依啓。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">迎接都監啟奏道：「關於世子接見（明使）是否妥當一事，已詢問過館伴與大臣並稟報。天使（明使）想要見王世子，在路途中也多次提起。今日進宮時，本想順便與王世子見面，臣已命令譯官轉告說：『如果與國王在同一個場合見面，坐次安排會很不方便。老爺（使臣）如果想見世子，世子可以在空閒日子前來拜見。』天使聽後說：『我想去見他是出於禮數；世子前來拜見也是出於禮數。』其本意其實是希望世子前來拜見。由此觀之，他想要見面並非只是場面話，其口中說的想先去拜見才是場面話。世子如果送交拜帖請求拜見，對方一定會很高興。」大王回答：「依啟（照辦）。」</div>
+</details>
+<div class="entry-note">The Ming envoy requested to meet the Crown Prince, leading to discussions on diplomatic protocol and the Prince's formal greeting.</div>
+</div>
+<div class="sillok-entry" data-persons="尹昉 申欽" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 四月 · 禮曹 啓 (冠服議)</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">禮曹啓曰："王世子接見詔使時冠服，議于大臣，則左議政尹昉、右議政申欽以為：'該曹啓辭，詳盡無餘。臣等亦記丙午年天使時，該曹以翼善冠、衮龍袍啓請，而先王以未冊封之故，初以為疑，卒從大臣之議，依該曹啓辭為之矣。若着帽子，則下同臣僚，似未妥當。今亦遵行丙午之例何如？'"答曰："知道。依丁酉年例，着帽子相見，似為合宜，更議以啓。"大臣以為："依上教施行，亦似無妨。"從之。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">禮曹啟奏道：「關於王世子接見詔使時的冠服，詢問過大臣後，左議政尹昉、右議政申欽認為：『該曹（禮曹）的啟辭已詳盡無遺。臣等也記得丙午年迎接天使時，該曹請求穿翼善冠、衮龍袍，先王（宣祖）當初因為世子尚未正式受冊封而有所遲疑，最終聽從了大臣的建議，依照該曹的啟奏執行。如果戴帽子，則與一般臣僚相同，似乎不太妥當。現在也遵照丙午年的例子執行如何？』」大王回答：「知道了。但依據丁酉年的例子，戴帽子相見似乎較為合宜，再商議後啟奏。」大臣們隨後認為：「依照聖諭執行似乎也無妨。」大王最終採納了此建議。</div>
+</details>
+<div class="entry-note">Debate on the Crown Prince's attire for meeting Ming envoys, balancing formal status with established precedents.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 · 世子傅 啓 (冠服議)</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">諫院請從該曹之議，不許。○世子傅使侍講院啓曰："世子時未受册，命着翼善冠，於華使所見處，雖或未安，而至於黑角帶、無紋袍，則本非世子品服。今依此施行，則不但與宮官卑秩，混同無别。今以世子有服之故，而遽着不當服之服，接待王人，事體未安，天使亦必疑訝其非禮，着有紋袍及烏角帶，允爲合宜。"答曰："依啓。着有紋袍，則用犀帶似可，更議以定。"復啓曰："臣意亦以爲，依上教，用犀帶允當，而但旣用犀帶，則不可無襆子，以備儀章。龍襆雖不可用，大君所着麒麟，用之爲當，而麒麟未及措備，則一品所用白澤、仙鶴中，隨所得用之之意，敢啓。"答曰："用白澤普子，可也。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">諫院請求聽從禮曹的建議（穿正式龍袍），大王不准。○世子傅命侍講院啟奏說：「世子目前尚未正式受冊封，命令他戴翼善冠在華使（明使）所見之處雖然可能有所不安，但至於黑角帶、無紋袍，則本來就不是世子的品級服飾。現在如果依此執行，則不但與宮中卑微官員的服飾混淆無別，且如今因為世子正在服喪期間，卻突然穿著不當的服飾去接待天朝使臣，體統上極為不安，天使也一定會訝異這是不合禮數的。因此穿著有紋龍袍以及烏角帶更為合宜。」大王回答：「依啟執行。穿有紋龍袍的話，配用犀角帶似乎可以，再商議後決定。」隨後又啟奏道：「臣的意見也認為依照聖教配用犀角帶是妥當的，但既然用了犀角帶，就不可沒有補子（官服上的圖案）以完備儀表章程。龍補雖然不可使用，但大君所穿的麒麟補子最為妥當。如果麒麟補子來不及準備，則可以在一品官員所用的白澤或仙鶴中，隨所得之物選用。」大王回答：「用白澤補子就可以了。」</div>
+</details>
+<div class="entry-note">The Crown Prince's tutor argued that the Prince should wear appropriate rank insignia when receiving the Ming envoy, even without formal Ming investiture.</div>
+</div>
+<div class="sillok-entry" data-persons="金瑬 李廷龜" data-themes="外交" style="--entry-color:#1a5276">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 四月 · 詔使 詣 成均館</div>
+<div class="entry-tags"><span class="tag" style="--c:#1a5276">外交</span></div>
+</div>
+<div class="entry-text">○詔使詣成均館，拜文廟後，上殿周覽，仍步往明倫堂。館伴李廷龜、遠接使金瑬，行再拜禮，各就坐。儒生入庭行禮，詔使起立，拱手答揖。詔使謂譯官曰："貴國文廟之制，一如中朝，多士濟濟，可見禮義之風。但俺等二人當分庭行禮，而俱設拜席於東庭，此與天朝有異"云。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">○詔使前往成均館，在祭拜文廟（孔廟）之後，上殿周旋覽閱，隨後步行前往明倫堂。館伴李廷龜、遠接使金瑬行再拜之禮，各自就座。儒生進入庭院行禮，詔使起立，拱手回禮。詔使對譯官說：『貴國文廟的制度，與中原朝廷完全一樣，學生濟濟一堂，可見禮義之風。只是我們二人應當分庭行禮，而你們卻將拜席都設在東庭，這與天朝的禮節有所差異。』</div>
+</details>
+<div class="entry-note">Ming envoys visited Sungkyunkwan (the National Academy), praising the Confucian rituals and the scholarly atmosphere.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖四年 四月 · 賜 陪從官</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">上賜世子接見天使時陪從官，輔德豹皮一領，弼善以下各鹿皮一領。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">大王賞賜王世子接見天使（明使）時跟隨陪從的官員，賜予輔德一領豹皮，弼善以下官員則各賜一領鹿皮。</div>
+</details>
+<div class="entry-note">The King granted rewards of leopard and deer skins to the officials who accompanied the Prince during the diplomatic reception.</div>
+</div></div><div class="period-section" data-period="1627" style="--period-color:#c0392b; display: none;">
+<div class="period-section-header">
+<div class="period-year-large">1627</div>
+<div class="period-event-name">胡亂 · 嘉禮 · 舉哀</div>
+<div class="period-vol-label">仁祖五年</div>
+<div class="period-subtitle">Jeongmyo Horan, Crown Prince's wedding, and mourning for the Ming Emperor</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="服制 禮制" style="--entry-color:#6c3483">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 庚午日 · 禮曹 啓 (祥祭後還宮服色)</div>
+<div class="entry-tags"><span class="tag" style="--c:#6c3483">服制</span><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">庚午禮曹請於十四日祥祭後還宮時，殿下黲袍、世子吉服、近侍及隨駕百官則黑團領、侍衛將士以下則時服，大殿輿輦、傘扇，裹以青色，上曰："世子以吉服隨駕及輿輦等物，裹以青色，殊未妥當，更爲議定。"回啓曰："禮文云：'小祥日應服期者，服吉服。'王世子期服已盡，禮當吉服。但古者祥祭，卜日而行。今用初忌，忌日服吉服，亦似未安。還宮時，則以揚赤色黑衣隨駕，自翌日服吉服似當。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">庚午日，禮曹請求在十四日行祥祭（周年祭）後還宮時，殿下（國王）穿黲袍（淡青色袍），世子穿吉服，近侍及隨駕百官穿黑團領，侍衛將士以下穿時服。大殿用的輿輦、傘扇等物，應包裹青色。大王說：「世子穿吉服隨駕以及輿輦等物包裹青色，非常不妥當，請重新商定。」禮曹回覆說：「禮文中說：『小祥日應服期年喪者，穿吉服。』王世子的期年之喪已經結束，按禮數理應穿吉服。但古人舉行祥祭是占卜吉日而行，現在是用初忌日（一周年忌日），在忌日穿吉服似乎有所不安。建議還宮時，世子穿不帶紅色的黑衣隨駕，從第二天起再穿吉服為宜。」</div>
+</details>
+<div class="entry-note">Discussion on the Crown Prince's transition from mourning attire to regular dress following the first anniversary memorial rite (Sangjae).</div>
+</div>
+<div class="sillok-entry" data-persons="尹昉 李貴 金瑬 崔鳴吉" data-themes="胡亂" style="--entry-color:#c0392b">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 正月 丙戌日 · 引見大臣 (賊迫安州)</div>
+<div class="entry-tags"><span class="tag" style="--c:#c0392b">胡亂</span></div>
+</div>
+<div class="entry-text">丙戌引見大臣、備局堂上、兩司長官。尹昉曰："賊已迫安州。自上雖未輕動，而内殿則不可不早自出避。"上曰："慈殿則明日，當先幸江都。"吳允謙曰："李曙旣入南漢則臨津無軍可守。外議皆以爲：'申景禛當把守臨津'，而亦以爲：'都監之軍，不可不扈衛'，何以定計？"金瑬曰："李元翼則以爲：'輦下親兵，不可分送防灘，莫如以水原軍，送于臨津'，云。"上曰："予意亦然。"允謙曰："自上以南漢爲重，而李曙總戎畿甸，與其退入南漢，莫如進守臨津也。"上曰："李曙修築南漢，其意有在。今不可爲彼此不及之論。"李貴曰："臣本不避嫌。李時白，卽臣之子也。三千之軍，鍊習已久，若令臨陣，必不旋踵，而今送於臨津乏餉之地，徒死何益？若令勤王，扈衛必固。"瑬曰："寇已深矣。長江之險，棄而不守，謀國之道，豈宜如此？"上曰："兵勢孤單，以此留難，而都監水原軍兵中，當調送。"瑬曰："聖算已定，不敢更議，而大駕一入江都之後，則南漢形勢，不如秃峴。何可捨便近之秃峴，而以南漢爲重乎？"鳴吉曰："宜令李時白，往守臨津，事急則入守坡州山城，以忠清道軍，俾守秃峴。"上曰："都監軍則可專屬扈衛。"昉曰："總戎軍兵，亦可抽送臨津。"貴曰："水原之軍，請置之輦下扈衛。"上曰："李時白之軍，頗爲鍊習，亦可領入江都。今之事勢，但當專力江都、南漢而已。且宜分付都監，令諸軍妻子，并入江都。"上又曰："今日告祭于廟、社，明日奉移。"金自點曰："内殿行次，事勢甚急。金慶徵多有風力，願與同事。"上許之。上又曰："今日卜相。右相則廟‧社主、慈殿，陪行。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">丙戌日，大王召見大臣、備邊司堂上以及兩司（司憲府、司諫院）長官。尹昉說：「賊軍（後金軍）已經迫近安州。殿下雖然不能輕易動身，但內殿（王妃）則不可不儘早出宮避難。」大王說：「大妃殿下明天將先行前往江華島。」吳允謙說：「李曙既然已經進入南漢山城，那麼臨津江就沒有軍隊可以防守了。外界議論都認為應派申景禛把守臨津江，但也認為都監的軍隊不可不用於護衛，該如何定計？」金瑬說：「李元翼認為，大駕親兵不可分送去防守灘口，不如調配水原軍去臨津江。」大王說：「我的意思也是如此。」吳允謙說：「殿下以南漢山城為重，但李曙總管京畿一帶，與其退守南漢，不如進守臨津江。」大王說：「李曙修築南漢山城是另有深意，現在不宜討論誰是誰非。」李貴說：「臣向來不避嫌。李時白就是臣的兒子，他麾下的三千名士兵訓練已久，如果派往戰場，必能奮勇爭先。現在如果派往臨津江那種缺乏軍糧的地方，徒然送死有何益處？如果令其勤王護衛，必定能鞏固防線。」金瑬說：「敵人已經深入了。長江之險（臨津江）如果棄而不守，這難道是謀國之道嗎？」大王說：「兵力孤單，因此難以定奪，應從都監 and 水原軍中調配派遣。」金瑬說：「聖裁已定，不敢再多言。但大駕進入江華島後，南漢的形勢不如禿峴。為何捨棄近便的禿峴而重南漢呢？」崔鳴吉說：「應命李時白前往駐守臨津江，情勢危急則退守坡州山城，並調配忠清道的軍隊駐守禿峴。」大王說：「都監的軍隊可以專職負責護衛。」尹昉說：「總戎廳的軍隊也可以抽調派遣至臨津江。」李貴說：「請讓水原軍留在聖駕左右負責護衛。」大王說：「李時白的軍隊訓練有素，可以帶入江華島。現在的事態，只能全力專注於江華島與南漢山城了。此外應吩咐都監，命令諸軍的家眷也一同進入江華島。」大王又說：「今天先祭告宗廟、社稷，明天正式奉移。」金自點說：「內殿行次事態緊急，金慶徵很有才幹，願與他一同辦事。」大王准奏。大王又說：「今天卜選首相。右相則負責陪行宗廟、社稷神位及慈殿（大妃）。」</div>
+</details>
+<div class="entry-note">As Manchu forces approached Anju, the King convened an emergency council debating whether to defend the Imjin River, hold Namhansanseong, or retreat to Ganghwado.</div>
+</div>
+<div class="sillok-entry" data-persons="李元翼 尹昉 李貴 李廷龜" data-themes="胡亂" style="--entry-color:#c0392b">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 正月 · 丙戌 引見 (義州陷落)</div>
+<div class="entry-tags"><span class="tag" style="--c:#c0392b">胡亂</span></div>
+</div>
+<div class="entry-text">尹昉曰："在喪人請起復。"上曰："可矣。"李廷龜曰："請收用罷散武弁。"上曰："雖在竄黜之人，如其可用，用之。"小宦以西來狀啓進，上曰："噫！義州已陷矣。"李貴曰："事已急矣，宜有分朝之舉。但守江都，終何所賴？"昉曰："李元翼奉世子南下，收拾人心可乎？"上曰："世子年幼，不可遠去矣。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">尹昉說：「正在服喪的人請准予起復（恢復官職）。」大王說：「可以。」李廷龜說：「請起用已罷免或流散的武官。」大王說：「雖然是被竄逐貶黜的人，如果可以使用，就起用他們。」小宦官進獻了從西邊傳來的狀啟，大王看後嘆道：「唉！義州已經陷落了！」李貴說：「事態已經非常緊急，應當舉行分朝（設立第二政府）之舉。但如果僅僅死守江華島，最終又能依仗什麼呢？」尹昉說：「讓李元翼奉王世子南下，去收拾人心如何？」大王說：「世子年紀還小，不能去太遠的地方。」</div>
+</details>
+<div class="entry-note">With news of Uiju's fall, the court urgency for the Divided Court grew, though Injo remained protective of the young Prince.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="胡亂" style="--entry-color:#c0392b">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 正月 · 兩司 合啓 (分朝)</div>
+<div class="entry-tags"><span class="tag" style="--c:#c0392b">胡亂</span></div>
+</div>
+<div class="entry-text">兩司合啓曰："分朝之舉，自漢、唐以來，亦有行之者。況江都僻在海島，大駕一入之後，朝家之命令不行，各道之漕運不通，則豈不大可憂哉？世子雖在沖年，平日臣庶，已有愛戴之心。臨亂監撫，必有延頸之望，請依古事，亟命分朝，屬諸元老大臣，內外控制，以為恢復之計。"答曰："從當議處。"又啓曰："臨津把截之計，尚未堅定，只以若干之兵，候望而已。都城無所恃，長江無所賴，此無異於以國與敵也。三南軍兵，不日將至，定將把守，猶可及也。請亟令廟堂，極擇大將，急急把截。"上令備局議定，備局請以忠清兵使柳琳定為大將，上從之。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">兩司（司憲府與司諫院）聯合啟奏道：「分朝之舉，從漢、唐以來就有實行的先例。更何況江華島地處偏僻海島，聖駕一旦進入後，朝廷的命令難以傳達，各道的糧草漕運也無法接通，這難道不令人深感憂慮嗎？世子雖然年幼，但平日裡臣民百姓已對他有愛戴之心。臨亂監國撫軍，百姓必定翹首企盼。請求依照古事，趕快下命分朝，並委任元老大臣輔佐，內外控制協調，作為恢復國土的計策。」大王回答：「應當隨後議處。」兩司又啟奏說：「防守臨津江的計策尚未堅定，目前只是派遣了少許兵力進行候望而已。都城無所倚靠，長江（臨津江）也無所憑仗，這無異於將國家拱手送給敵人。三南（忠清、全羅、慶尚）的軍兵不日將抵達，若能指定將領把守，還來得及。請求趕快命令廟堂（議政府），精選大將趕快加強防禦。」大王命令備邊司議定，備邊司請求任命忠清兵使柳琳為大將，大王准奏。</div>
+</details>
+<div class="entry-note">Officials urged the Prince to lead the Divided Court to ensure command and supply lines remained open during the war.</div>
+</div>
+<div class="sillok-entry" data-persons="尹昉 申欽 李元翼" data-themes="胡亂" style="--entry-color:#c0392b">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 正月 · 分朝論議 (申欽 · 尹昉 · 元翼)</div>
+<div class="entry-tags"><span class="tag" style="--c:#c0392b">胡亂</span></div>
+</div>
+<div class="entry-text">申欽曰："元翼之言是矣。"尹昉曰："世子雖幼沖，若向南方，則人心有所依賴矣。"上曰："世子年幼，以此持難。大臣一人，可往南方，收拾人心。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">申欽說：「李元翼的話是對的。」尹昉說：「世子雖然年幼，但如果前往南方，則人心就會有所依賴。」大王說：「世子年幼，因此很難抉擇。可以命一名大臣前往南方，去收拾人心。」</div>
+</details>
+<div class="entry-note">The court debated dividing the royal government (Bunjo) and sending the Prince south to rally public support.</div>
+</div>
+<div class="sillok-entry" data-persons="尹昉 崔鳴吉 李植" data-themes="胡亂" style="--entry-color:#c0392b">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 正月 · 引見大臣 (分朝行期 · 回書)</div>
+<div class="entry-tags"><span class="tag" style="--c:#c0392b">胡亂</span></div>
+</div>
+<div class="entry-text">上引見大臣、備局、兩司長官。尹昉曰："旣已分朝，世子行期，可以速定。"上曰："欲一時發行。"上又曰："回書，旣已裁送耶？"昉曰："臺論不止，時未舉行。"崔鳴吉曰："答書，宜稱以朝鮮國，踏印以送。"金藎國曰："渠旣以國王前爲書，不可不以國書答送。"上曰："姜絪宜送于平壤，與雴、璛同事。"李植曰："速定一將，領率輕兵，進救平壤，似不可已。毛將存沒，雖未聞知，其不與奴通明矣。"上曰："將此事情，奏聞天朝，請南軍及火器，如壬辰則何如？"植曰："勢似不及，而告急一節，不可不爲也。"上曰："然。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">大王召見大臣、備邊司以及兩司長官。尹昉說：「既然已經決定分朝，世子的出發日期可以盡快定下來。」大王說：「想讓大家同時發行。」大王又問：「給敵人的回書，已經草擬送出了嗎？」尹昉說：「臺閣的議論一直不停，目前還沒舉行。」崔鳴吉說：「答覆的文書中，應自稱為『朝鮮國』，並蓋上大印送出。」金藎國說：「對方既是以送給國王的名義寫書，我們不可不以國書的形式回覆。」大王說：「姜絪應派往平壤，與金雴、沈璛共同辦事。」李植說：「應速定一名大將，率領輕兵前去營救平壤，這似乎是不可或缺的。雖然還不知道毛文龍大將的存亡，但他絕不會與奴賊（後金）私通是顯而易見的。」大王問：「將這些事情奏報給天朝（大明），請求南軍以及火器的援助，像壬辰倭亂時那樣如何？」李植說：「情勢似乎已經來不及了，但告急這一程序是不可不做的。」大王說：「是的。」</div>
+</details>
+<div class="entry-note">The King and ministers finalized plans for the Prince's departure and discussed diplomatic responses to the invaders and the Ming court.</div>
+</div>
+<div class="sillok-entry" data-persons="李元翼 鄭經世 李命俊" data-themes="胡亂" style="--entry-color:#c0392b">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 正月 · 引見備局兩司 (分朝駐駕何地)</div>
+<div class="entry-tags"><span class="tag" style="--c:#c0392b">胡亂</span></div>
+</div>
+<div class="entry-text">上引見備局、兩司長官曰："分朝駐駕，當於何地？"李元翼曰："宜先往全州，收拾兩道。"鄭經世曰："安、平兩城，不戰而潰，臨津天塹，今將棄之，宜乎百姓之謂'和，誤國也。'無已則世子入于江都，大駕則南幸，忠臣義士，孰不爲王同仇乎？臣受本道號召之命，今當下去。伏願殿下，無自摧沮，以鼓三軍之氣。"上曰："同力國事，以之死生者，本道有其人乎？"經世曰："是則有之。"上曰："卿等姑退。世子將出矣。"諸臣趨出。引見分朝僚屬、將官。上曰："世子幼沖，善輔導之。"李命俊曰："國事至此，不知所云。前有藩籬，民乃有固志。李曙盡率精鋭，退入南漢，此誠何意也？李曙避亂之計則得矣，爲國捍禦之道則失矣。李曙受國厚恩，而今若是，豈不痛哉？"上曰："卿等只論分朝事可也。"是日，世子發行。政院及侍臣等，出送門外，莫不飮泣，道路觀者，亦有垂涕者。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">大王召見備邊司與兩司長官並問道：「分朝駐紮的場所，應該選在什麼地方？」李元翼回答：「應先前往全州，以便收拾湖南與嶺南兩道的人心。」鄭經世說：「安州、平壤兩座城池不戰而潰，臨津江的天險現在又要放棄，難怪百姓們會說『主和是誤國之舉』。如果實在沒辦法，就請世子進入江華島，聖駕則向南遷移，如此一來，忠臣義士誰不願意與君王共同禦敵呢？臣已接到在本道（嶺南）號召義兵的命令，現在就當南下。伏願殿下不要自我消沉，應鼓舞三軍的士氣。」大王問：「在本道中，是否有能合力國事、視死如歸的人？」鄭經世說：「那當然是有的。」大王說：「卿等且退下，世子將要出發了。」諸臣趨身而出。隨後大王召見了分朝的官僚屬下與將官。大王囑託道：「世子年幼，請你們好好輔導他。」李命俊說：「國事到了這種地步，臣不知該說什麼。以前有外防藩籬時，百姓尚有堅定的意志。李曙卻帶領全部精銳退入南漢山城，這到底是存了什麼心思？李曙避亂的計策雖然得逞了，但保家衛國之道卻喪失了。李曙受國家厚恩，現在卻如此表現，難道不令人痛心嗎？」大王說：「卿等只談論分朝的事情就可以了。」當天，王世子正式出發。政院官員及侍從臣下等到門外送行，無不掩面泣下，道路兩旁的觀看者也都紛紛流淚。</div>
+</details>
+<div class="entry-note">The King determined Jeonju as the base for the Crown Prince's Divided Court. On this day the Prince departed — officials wept at the gate, and passersby shed tears at the roadside.</div>
+</div>
+<div class="bunjyo-map-container">
+<div class="bunjyo-map-header">
+<h4 style="margin:0; font-size:15px; color:#c0392b; display:flex; align-items:center; gap:6px;">
+<svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                分朝 (Divided Court) Locations (1627)
+            </h4>
+<button class="bunjyo-map-fs-btn" id="bunjyo-map-fs-btn" title="Fullscreen">⛶</button>
+</div>
+<div id="bunjyo-map-wrapper">
+<div id="bunjyo-map"></div>
+</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="地圖" style="--entry-color:#2e86c1">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 二月 丁未日 · 王世子 至全州</div>
+<div class="entry-tags"><span class="tag" style="--c:#2e86c1">地圖</span></div>
+</div>
+<div class="entry-text">丁未上在江都。世子至全州。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">丁未日，君王在江華島。世子抵達全州。</div>
+</details>
+<div class="entry-note">The Prince reached Jeonju during his mission to the southern provinces.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="地圖" style="--entry-color:#2e86c1">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 二月 庚寅日 · 王世子 還全州</div>
+<div class="entry-tags"><span class="tag" style="--c:#2e86c1">地圖</span></div>
+</div>
+<div class="entry-text">庚寅上在江都。王世子還自全州。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">庚寅日，君王在江華島。王世子從全州啟程返回。</div>
+</details>
+<div class="entry-note">The Prince began his return journey from Jeonju.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="地圖" style="--entry-color:#2e86c1">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 二月 癸巳日 · 王世子 謁廟社</div>
+<div class="entry-tags"><span class="tag" style="--c:#2e86c1">地圖</span></div>
+</div>
+<div class="entry-text">癸巳上在江都。王世子謁于廟社奉安處。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">癸巳日，君王在江華島。王世子參拜了宗廟社稷的奉安處。</div>
+</details>
+<div class="entry-note">The Prince performed rituals at the temporary shrine for the royal ancestral tablets.</div>
+</div>
+<div class="sillok-entry" data-persons="鄭弘溟" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 卷十六 · 下教 (宮官無禮) 及 鄭弘溟 啓</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">又下教曰："雖在搶攘之中，禮者不可斯須去身。世子南下時，路逢標信宣傳官欲下馬，則宮僚止之，使宣傳官從路傍避去，宮官等亦不祗迎，偃然騎馬而過云。其無禮莫甚，其時講院官員，并從重推考。"執義鄭弘溟啓曰："頃日分朝上來時，臣以兼文學，陪從。路逢標信宣傳官，司鑰以世子下馬與否，來問于臣，臣之妄意，狹路泥濘，衛率駢闐，世子下馬，事勢難便，請令宣傳官，駐馬道上高阜，世子從道下回馬，以待宣傳官之過去，至於隨駕諸官，則皆下馬，而祗迎一節，未及省得。今承聖教，以無禮爲教，而有從重推考之命，請賜罷斥。"答曰："勿辭。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">大王又下達教命說：「雖然處於混亂動盪之中，但禮數不可須臾片刻離開自身。世子南下時，在路上遇到持有標信的宣傳官本應下馬示意，宮中僚屬卻制止了他，讓宣傳官從路旁避讓而過，宮中官員也沒有恭敬迎接，反而傲慢地騎馬經過。這種無禮行為簡直太過分了，當時在場的講院官員應一併從重追究處分。」執義鄭弘溟啟奏道：「前幾日分朝北上時，臣以兼任文學的身份隨從。路遇持有標信的宣傳官時，司鑰（官職名）曾來詢問臣關於世子是否應下馬。臣當時糊塗地認為，道路狹窄泥濘，護衛士兵眾多，世子下馬在情勢上很不方便，於是請宣傳官駐馬在道路高處，世子則從道下繞行，等待宣傳官經過。至於隨駕的其他官員都已下馬，而恭敬迎接這一節，當時未能顧及到。現在承蒙聖教指責無禮，並有從重處分的命令，請准予罷免臣的職務。」大王回答：「不必辭職。」</div>
+</details>
+<div class="entry-note">The King reprimanded palace officials for failing to dismount and greet a royal messenger during the Prince's southward journey; Jeong Hong-myeong explained the road conditions but still offered resignation.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 三月 · 下教旨 (世子還宮)</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">上下教曰："世子還宮時，歷入廟所，拜謁而來，似合情禮。言于禮曹。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">大王下達教命說：「王世子回宮時，順道進入廟所（臨時安置神位之處）進行拜謁後再回來，這似乎比較符合人情與禮法。將此意思轉告禮曹。」</div>
+</details>
+<div class="entry-note">The King ordered the Prince to pay respects at the royal shrine upon his return to the capital.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 九月 · 嘉禮都監 啓 (親迎之禮)</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">嘉禮都監啓曰："別宮既有世子嬪所御之處，則世子親迎之禮，當行於別宮，而或有親迎於太平館之時。此雖謬禮，既有是規，何以處之？"答曰："別宮非但狹隘，親迎於太平館，乃是前規，依前例施行。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">嘉禮都監啟奏道：「別宮既然已有世子嬪居住的地方，那麼世子親迎（接新娘）的禮儀本應在別宮舉行。但也有過在太平館舉行親迎禮的時候，這雖然是不合正禮的，但既然已有這樣的規矩，該如何處理？」大王回答：「別宮不只是狹隘，在太平館親迎是以前就有的規矩，就依照前例執行吧。」</div>
+</details>
+<div class="entry-note">Discussion on the wedding venue for the Prince, opting for Taepyeonggwan due to space and precedent.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 十月 · 丁酉 禮曹 啓 (世子嬪外祖父母喪禮)</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">丁酉禮曹啓曰："以王世子臨外祖父母喪儀注，考諸《五禮儀》則無正文，只有臨師傅、貳師喪儀注，而禮貌繁多。考諸《大明集禮》，東宮臨外祖父母喪，則頗似詳明，而節目太略，故就《五禮儀》及《大明集禮》，乘與臨王公大大臣喪儀注，參酌刪潤以入矣。"</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">丁酉日，禮曹啟奏道：「關於王世子參加外祖父母喪禮的儀式程序，查閱《五禮儀》並無正式條文，只有參加師傅、貳師喪禮的儀式，且禮節貌樣非常繁瑣。查閱《大明集禮》，關於東宮參加外祖父母喪禮的部分則非常詳盡明確，但細節項目太過簡略。因此臣等參照《五禮儀》及《大明集禮》中關於乘車參加王公大臣喪禮的儀式，參酌刪減潤色後呈上。」</div>
+</details>
+<div class="entry-note">The court defined the mourning etiquette for the Prince's maternal grandparents, referencing both Korean and Ming codes.</div>
+</div>
+<div class="sillok-entry" data-persons="李貴" data-themes="教育" style="--entry-color:#d35400">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 十月 · 右贊成 李貴 上箚 (世子教養)</div>
+<div class="entry-tags"><span class="tag" style="--c:#d35400">教育</span></div>
+</div>
+<div class="entry-text">右贊成李貴上箚曰：閭閻教兒，科業為主，故必以先通文理為急，而儲君之學，異於是，必於知思未定之前，俾格言、至論，日陳於前，而浸灌薰陶。……近世，先正臣李珥，於《擊蒙要訣》，論為學之要甚詳，尤當觀玩，而研窮者也。世子乃一國之本也。其教養之方，不法先聖所訓，乃以閭閻家子弟之先文藝，而取科第者為法，先讀《史記》等書，如是而年歲積久，習與智長，化與心成，而為外物所誘，則雖欲變化氣質，扞格難入。必先讀《小學》，次讀四書，次讀五經，一如古學者課程可也。及其心志既正，德器已成，則不患文理之不通也。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">右贊成李貴上奏摺說：民間教育孩子是以科舉功名為主，因此必定以先通曉文辭理路為急務。但儲君的學問則不同，必須在心智尚未定型之前，讓名言格言、至理名論每天陳列在眼前，以便浸潤薰陶。……近代先賢李珥在《擊蒙要訣》中論述治學要點非常詳盡，尤其應當反覆觀摩研讀。世子是國家的根本，其教養的方法如果不效法先聖所傳授的訓誡，反而效法民間子弟先學文藝以博取科舉名次的做法，先讀《史記》等書籍，如此積年累月，習慣與智慧一同增長，化育與心志一同成就，萬一被外物所誘惑，則即便想要變化氣質，也會格格不入難以教導。必須先讀《小學》，接著讀四書，再讀五經，完全依照古代學者的課程進度才是正確的。等到心志端正、德行器識已成，就不必擔心文理不通了。</div>
+</details>
+<div class="entry-note">Yi Gwi advised a curriculum focused on character building and classical texts over mere literary skill for the Prince's education.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 十一月 · 辛酉 行世子嫁娉采禮</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">辛酉上以冕服，御崇政殿，行世子嬪納采禮如儀。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">辛酉日，大王穿著冕服（祭祀禮服），駕臨崇政殿，依照儀規舉行了世子嬪的納采禮（訂婚禮）。</div>
+</details>
+<div class="entry-note">The formal betrothal ritual (Nachae) for the Prince's marriage was conducted at Sungjeongjeon.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="外交 禮制" style="--entry-color:#1a5276">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 十一月 · 皇上 崩訃 · 舉哀</div>
+<div class="entry-tags"><span class="tag" style="--c:#1a5276">外交</span><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">禮曹啓曰："皇上崩逝，訃報已至，請行舉哀之禮。"上率王世子、百官，舉哀於崇政殿階上。備局啓曰："請差秩高官員具摺，以慰毛將。"從之。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">禮曹啟奏道：「皇上（大明天啟帝）崩逝的消息已經傳達，請依照禮法舉行舉哀之禮。」大王率領王世子及百官，在崇政殿的階梯上舉行了舉哀禮。備邊司啟奏說：「請差派高品階的官員攜帶弔唁文書，前去慰問毛文龍將軍。」大王准奏。</div>
+</details>
+<div class="entry-note">Upon news of the Ming Emperor's death, Injo and the Prince led the court in official mourning rites.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="外交 禮制" style="--entry-color:#1a5276">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 甲戌日 · 大行皇帝 成服禮</div>
+<div class="entry-tags"><span class="tag" style="--c:#1a5276">外交</span><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">甲戌上率王世子、百官，行大行皇帝成服禮於崇政殿階上。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">甲戌日，大王率領王世子及百官，在崇政殿階上舉行了大行皇帝（已故天啟帝）的成服禮（穿上正式喪服）。</div>
+</details>
+<div class="entry-note">The King and Crown Prince led the court in donning full mourning attire for the deceased Ming Emperor at Sungjeongjeon.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 · 行王世子嬪 納徵禮</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">上出御崇政殿，行王世子嬪納徵禮。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">大王駕臨崇政殿，舉行了王世子嬪的納徵禮（送聘禮）。</div>
+</details>
+<div class="entry-note">The King presided over the Naejing ceremony (formal presentation of betrothal gifts) for the Crown Prince's consort at Sungjeongjeon.</div>
+</div>
+<div class="sillok-entry" data-persons="金瑬 李弘胄" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 甲申日 · 行王世子嬪 告期禮</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">甲申行王世子嬪告期禮于崇政殿。正使金瑬、副使李弘胄，入庭四拜，承旨金蓍國跪請傳教。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">甲申日，在崇政殿舉行王世子嬪的告期禮（通知婚期）。正使金瑬、副使李弘胄進入庭院行四拜之禮，承旨金蓍國跪地請求傳達教旨。</div>
+</details>
+<div class="entry-note">The Gogi ceremony (formal announcement of the wedding date) for the Crown Prince's consort was conducted at Sungjeongjeon.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖五年 丁酉日 · 冊世子嬪禮</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">丁酉上御崇政殿，行册世子嬪禮。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">丁酉日，大王駕臨崇政殿，舉行了冊封世子嬪的典禮。</div>
+</details>
+<div class="entry-note">The formal investiture ceremony for the Crown Prince's consort was conducted at Sungjeongjeon.</div>
+</div>
+</div><div class="period-section" data-period="1628" style="--period-color:#d35400; display: none;">
+<div class="period-section-header">
+<div class="period-year-large">1628</div>
+<div class="period-event-name">丁卯後遺事</div>
+<div class="period-vol-label">仁祖六年</div>
+<div class="period-subtitle">Events and debates in the aftermath of the invasion</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-date">仁祖六年 乙丑日 · 王世子率百官 行本朝陳賀禮</div>
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">乙丑王世子率百官，行本朝陳賀禮。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">乙丑日，王世子率領百官，舉行了本朝的陳賀禮（朝賀典禮）。</div>
+</details>
+<div class="entry-note">The Crown Prince led the court officials in performing the formal congratulatory rite on behalf of the Chosŏn court.</div>
+</div>
+</div><div class="period-section" data-period="1637" style="--period-color:#922b21">
+<div class="period-section-header">
+<div class="period-year-large">1637</div>
+<div class="period-event-name">丙子胡亂 · 入質瀋陽</div>
+<div class="period-vol-label">仁祖十五年</div>
+<div class="period-subtitle">The Second Manchu Invasion: surrender at Samjondo and departure for Shenyang as a hostage</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="入質" style="--entry-color:#0e6655">
+<div class="entry-meta">
+<div class="entry-date">仁祖十五年 正月 三十日 · 三田渡</div>
+<div class="entry-tags"><span class="tag" style="--c:#0e6655">入質</span></div>
+</div>
+<div class="entry-text">王世子從焉。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">王世子也跟從其後。</div>
+</details>
+<div class="entry-note">The Crown Prince accompanied King Injo to Samjondo (三田渡) for the surrender ceremony.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="入質" style="--entry-color:#0e6655">
+<div class="entry-meta">
+<div class="entry-date">仁祖十五年 二月 一日</div>
+<div class="entry-tags"><span class="tag" style="--c:#0e6655">入質</span></div>
+</div>
+<div class="entry-text">王世子及嬪宮、鳳林大君及夫人於陣中。……以麟坪大君及夫人，還送于京中。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">王世子與嬪宮、鳳林大君與夫人都被扣留在敵陣（清軍營地）中。……命令將麟坪大君與夫人送回京城。</div>
+</details>
+<div class="entry-note">The Crown Prince, his consort, and 鳳林大君 were detained in the Qing camp. 麟坪大君 was sent back to the capital.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="入質" style="--entry-color:#0e6655">
+<div class="entry-meta">
+<div class="entry-date">仁祖十五年 二月 五日</div>
+<div class="entry-tags"><span class="tag" style="--c:#0e6655">入質</span></div>
+</div>
+<div class="entry-text">世子自虜營返回，向群臣辭別。……上敎：「說書兪棨在山城，極言和議之非……命勿陪往。」</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">王世子從虜營（清營）返回，與群臣辭別。……大王下教說：「說書兪棨在山城時，極力陳述主和的錯誤……命令他不准陪同世子前往。」</div>
+</details>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="入質" style="--entry-color:#0e6655">
+<div class="entry-meta">
+<div class="entry-date">仁祖十五年 二月 八日 · 昌陵 西</div>
+<div class="entry-tags"><span class="tag" style="--c:#0e6655">入質</span></div>
+</div>
+<div class="entry-text">上於昌陵西送別世子。世子臨別受敎：「勉之哉！勿激怒，勿見輕。」世子對群臣曰：「主上在此，何敢乃爾？」</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">大王在昌陵以西的地方送別世子。世子臨別時接受教誨說：「勤勉努力啊！不要激怒對方，也不要被對方輕視。」世子對群臣說：「主上殿下尚在此地，我怎敢如此（不顧國家）？」</div>
+</details>
+<div class="entry-note">King Injo's parting words: "Do your best. Do not provoke anger, and do not let yourself be looked down upon." The Crown Prince replied to the officials: "The King is here — how could any of you dare act otherwise?"</div>
+</div>
+</div>
+
+<!-- 1638 -->
+<div class="period-section" data-period="1638" style="--period-color:#17a589">
+<div class="period-section-header">
+<div class="period-year-large">1638</div>
+<div class="period-event-name">在瀋陽</div>
+<div class="period-vol-label">仁祖十六年</div>
+<div class="period-subtitle">Life in Shenyang as a hostage: provisions, festival greetings, illness</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="在瀋" style="--entry-color:#17a589">
+<div class="entry-meta">
+<div class="entry-date">仁祖十六年 三月 二十一日</div>
+<div class="entry-tags"><span class="tag" style="--c:#17a589">在瀋</span></div>
+</div>
+<div class="entry-text">世子在瀋陽，平安監司每朔進膳。世子念農務方緊，令減四月朔膳，西民感悅。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">王世子在瀋陽時，平安道觀察使（監司）每個月都會進獻食物。世子考慮到農忙時節正緊迫，命令削減四月份的膳食進獻，西方的百姓（平安道民）對此深感欣慰與喜悅。</div>
+</details>
+<div class="entry-note">The Pyeongan governor sent monthly provisions to the Crown Prince. Knowing the farming season was pressing, the Crown Prince ordered the April provisions reduced, earning goodwill from the western population.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="在瀋" style="--entry-color:#17a589">
+<div class="entry-meta">
+<div class="entry-date">仁祖十六年 四月 二十五日 · 端午</div>
+<div class="entry-tags"><span class="tag" style="--c:#17a589">在瀋</span></div>
+</div>
+<div class="entry-text">王世子遣輔德李時楷問安，以端午節日也。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">王世子派遣輔德李時楷前來向大王問安，因為正值端午佳節。</div>
+</details>
+<div class="entry-note">On the Dragon Boat Festival, the Crown Prince dispatched his attendant 李時楷 back to Korea to inquire after the King's health.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="在瀋" style="--entry-color:#17a589">
+<div class="entry-meta">
+<div class="entry-date">仁祖十六年 五月 二十日</div>
+<div class="entry-tags"><span class="tag" style="--c:#17a589">在瀋</span></div>
+</div>
+<div class="entry-text">世子有疾，遣宣傳官于瀋陽以問之。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">得知王世子患病，派遣宣傳官前往瀋陽進行慰問。</div>
+</details>
+</div>
+</div>
+
+<!-- 1645 -->
+<div class="period-section" data-period="1645" style="--period-color:#6c3483">
+<div class="period-section-header">
+<div class="period-year-large">1645</div>
+<div class="period-event-name">歸國 · 薨逝 · 賜謚</div>
+<div class="period-vol-label">仁祖二十三年</div>
+<div class="period-subtitle">Return from Shenyang, sudden death at Changgyeong Palace, bestowal of the posthumous title 昭顯</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="薨逝" style="--entry-color:#4a235a">
+<div class="entry-meta">
+<div class="entry-date">仁祖二十三年 二月 十八日</div>
+<div class="entry-tags"><span class="tag" style="--c:#4a235a">薨逝</span></div>
+</div>
+<div class="entry-text">世子還，淸使偕入京。先是，淸使固要上郊迎……於是，上扶掖而出，迎于闕庭。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">王世子回國，清國使臣一同進入京城。此前，清使堅持要求大王前往郊外迎接……最終，大王在侍從攙扶下走出來，在宮廷迎接。</div>
+</details>
+<div class="entry-note">The Crown Prince returned with Qing envoys. The envoys had insisted the King personally go out to receive his son; ultimately the King went out and welcomed him in the palace courtyard.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="薨逝" style="--entry-color:#4a235a">
+<div class="entry-meta">
+<div class="entry-date">仁祖二十三年 四月 二十六日</div>
+<div class="entry-tags"><span class="tag" style="--c:#4a235a">薨逝</span></div>
+</div>
+<div class="entry-text">王世子卒于昌慶宮歡慶堂。世子姿質英明，而器量不弘……世子十年異域，備嘗險艱，東還纔數月而遘疾，醫官等亦妄施鍼藥，終至不救。……世子年三十四，有三子三女。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">王世子在昌慶宮歡慶堂去世。世子的資質英明，但器量不夠宏大……世子在異國他鄉度過了十年，嚐遍了險阻艱辛，回到東方（朝鮮）才幾個月就染上疾病，醫官們又胡亂施用針灸藥物，最終導致無法救治。……世子享年三十四歲，留有三子三女。</div>
+</details>
+<div class="entry-note">The Crown Prince died suddenly at Hwangyeong Hall in Changgyeong Palace, age 34. The Sillok notes that after ten years in a foreign land, the physicians' improper use of acupuncture and medicine contributed to his death.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="薨逝 禮制" style="--entry-color:#4a235a">
+<div class="entry-meta">
+<div class="entry-date">仁祖二十三年 五月 十六日</div>
+<div class="entry-tags"><span class="tag" style="--c:#4a235a">薨逝</span><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">議謚曰昭顯。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">商議後的諡號定為「昭顯」。</div>
+</details>
+<div class="entry-note">The posthumous title 昭顯 was officially determined.</div>
+</div>
+</div>
+
+<!-- 1646 -->
+<div class="period-section" data-period="1646" style="--period-color:#7b241c">
+<div class="period-section-header">
+<div class="period-year-large">1646</div>
+<div class="period-event-name">嬪宮姜氏之獄</div>
+<div class="period-vol-label">仁祖二十四年</div>
+<div class="period-subtitle">The trial and execution of the Crown Prince's consort, Consort Gang (愍懷嬪)</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="身後事" style="--entry-color:#424949">
+<div class="entry-meta">
+<div class="entry-date">仁祖二十四年 正月 三日</div>
+<div class="entry-tags"><span class="tag" style="--c:#424949">身後事</span></div>
+</div>
+<div class="entry-text">上進生鰒灸有毒，遂疑姜嬪。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">大王進食的烤生鮑魚中發現有毒，於是懷疑是姜嬪（世子嬪姜氏）所為。</div>
+</details>
+<div class="entry-note">King Injo was served grilled abalone suspected of containing poison; suspicion fell upon Consort Gang.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="身後事" style="--entry-color:#424949">
+<div class="entry-meta">
+<div class="entry-date">仁祖二十四年 二月 三日</div>
+<div class="entry-tags"><span class="tag" style="--c:#424949">身後事</span></div>
+</div>
+<div class="entry-text">備忘記云：「姜嬪在瀋之時，潛圖易位，預造紅錦翟衣，僭稱內殿之號。」</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">備忘記（大王親自草擬的公文）中說：「姜嬪在瀋陽的時候，暗中圖謀篡奪地位，預先製作了紅色錦緞翟衣（王后禮服），並僭稱『內殿』的稱號。」</div>
+</details>
+<div class="entry-note">The royal memorandum accused Consort Gang of secretly plotting to usurp the queen's position while in Shenyang — having royal robes made in advance and unlawfully using the title of the Inner Palace.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="身後事" style="--entry-color:#424949">
+<div class="entry-meta">
+<div class="entry-date">仁祖二十四年 二月 十二日</div>
+<div class="entry-tags"><span class="tag" style="--c:#424949">身後事</span></div>
+</div>
+<div class="entry-text">上下敎于政院：「廢出賜死之意，言于兩司。」</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">大王下達教命給承政院說：「將廢黜並賜死（世子嬪）的意思，傳達給兩司。」</div>
+</details>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="身後事" style="--entry-color:#424949">
+<div class="entry-meta">
+<div class="entry-date">仁祖二十四年 三月 十四日</div>
+<div class="entry-tags"><span class="tag" style="--c:#424949">身後事</span></div>
+</div>
+<div class="entry-text">廢昭顯世子嬪姜氏，賜死於故第，收其敎命竹冊、印、章服焚之。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">廢黜昭顯世子嬪姜氏，在她的舊居賜死。沒收她的教命、竹冊、印信以及章服（禮服）並焚毀。</div>
+</details>
+<div class="entry-note">Consort Gang was stripped of her title and ordered to die at her former residence. Her investiture documents, bamboo scroll, seal, and ceremonial garments were confiscated and burned.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="身後事" style="--entry-color:#424949">
+<div class="entry-meta">
+<div class="entry-date">仁祖二十四年 五月 二日</div>
+<div class="entry-tags"><span class="tag" style="--c:#424949">身後事</span></div>
+</div>
+<div class="entry-text">命以姜氏私藏銀一萬六百五十兩、黃金一百六十兩、倭劍十九柄，歸于戶曹，使之別置一庫，以備昭顯諸子婚娶之需。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">命令將姜氏私藏的一萬零六百五十兩白銀、一百六十兩黃金、十九把倭劍收歸戶曹管理。命其專門設置一個倉庫存放，以備將來昭顯世子諸子結婚成家時使用。</div>
+</details>
+<div class="entry-note">Consort Gang's private holdings — 10,650 taels of silver, 160 taels of gold, and 19 Japanese swords — were transferred to the Board of Revenue for the future marriages of 昭顯世子's sons.</div>
+</div>
+</div>
+
+<!-- 1647 -->
+<div class="period-section" data-period="1647" style="--period-color:#2c3e50">
+<div class="period-section-header">
+<div class="period-year-large">1647</div>
+<div class="period-event-name">三子流配濟州</div>
+<div class="period-vol-label">仁祖二十五年</div>
+<div class="period-subtitle">The three sons of 昭顯世子 exiled to Jeju Island</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="身後事 禮制" style="--entry-color:#424949">
+<div class="entry-meta">
+<div class="entry-date">仁祖二十五年 二月 四日</div>
+<div class="entry-tags"><span class="tag" style="--c:#424949">身後事</span><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">昭顯世子魂宮，姑設於仁慶宮內，而此非神主永妥之所。三年後似當依順懷宮之例，別立廟宇于他處。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">昭顯世子的魂宮暫時設在仁慶宮內，但這裡並非神主（靈位）可以長久安置的地方。建議在三年之後仿效順懷宮的先例，在其他地方另立廟宇。</div>
+</details>
+<div class="entry-note">The Ministry of Rites noted that the spirit shrine for 昭顯世子, temporarily housed at Ingyeong Palace, was not a suitable permanent location, and recommended establishing a separate shrine after three years.</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="身後事" style="--entry-color:#424949">
+<div class="entry-meta">
+<div class="entry-date">仁祖二十五年 五月 十三日</div>
+<div class="entry-tags"><span class="tag" style="--c:#424949">身後事</span></div>
+</div>
+<div class="entry-text">配昭顯世子三子石鐵、石麟、石堅于濟州。上諭：「一處定配，使之相依以生。內官、別將等輪定以送。」</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">將昭顯世子的三個兒子石鐵、石麟、石堅流放到濟州島。大王諭旨說：「將他們安置在同一個地方，讓他們能互相依靠生活。輪流指派內官和別將送行護送。」</div>
+</details>
+<div class="entry-note">The three sons — 石鐵 (age 12), 石麟 (age 8), and 石堅 (age 4) — were exiled to Jeju Island. King Injo directed that they be sent to the same place so that they might support one another.</div>
+</div>
+</div>
+
+<!-- 附錄 -->
+<div class="period-section" data-period="附錄" style="--period-color:#7f8c8d">
+<div class="period-section-header">
+<div class="period-year-large" style="font-size:28px;letter-spacing:0.05em">附錄</div>
+<div class="period-event-name">傳記摘要</div>
+<div class="period-subtitle">Biographical summary from the Appendix of 仁祖大王實錄</div>
+</div>
+<div class="sillok-entry" data-persons="" data-themes="禮制" style="--entry-color:#7d6608">
+<div class="entry-meta">
+<div class="entry-tags"><span class="tag" style="--c:#7d6608">禮制</span></div>
+</div>
+<div class="entry-text">王元妃韓氏誕三男，長昭顯世子諱□早卒，次今上殿下，次麟坪大君㴭。……丁丑往瀋陽，轉入燕京，乙酉春大歸，尋疾革殂逝。昭顯世子有三男、三女，男二死，一幼，三女未筓。</div>
+<details class="translation-toggle">
+<summary>查看白話文翻譯</summary>
+<div class="translation-text">仁祖大王的原妃韓氏（仁烈王后）誕生了三個兒子，長子是昭顯世子（諱名□）早逝，次子是當今聖上殿下（孝宗），三子是麟坪大君李㴭。……世子在丁丑年（1637）前往瀋陽，後來轉入燕京（北京），乙酉年（1645）春季大舉回國，不久病重去世。昭顯世子育有三子三女，兩個兒子已夭折，一個尚且年幼，三個女兒都還未成年（未及笄）。</div>
+</details>
+<div class="entry-note">Queen Han bore three sons — 昭顯世子 (died young), the present King [Hyojong], and 麟坪大君. Sohyeon went to Shenyang in 丁丑 [1637], later transferred to Beijing, returned in the spring of 乙酉 [1645], and soon died of illness. He had three sons and three daughters; two sons died young.</div>
+</div>
+</div>
+
+<div class="source-footer">
+<p>Sources: 朝鮮王朝實錄·仁祖大王實錄 (卷之八·十·十一·十二·十五·十六·二十三·二十四·二十五; 附錄), via
+                    <a href="https://zh.wikisource.org/wiki/%E6%9C%9D%E9%AE%AE%E7%8E%8B%E6%9C%9D%E5%AF%A6%E9%8C%84/%E4%BB%81%E7%A5%96%E5%AF%A6%E9%8C%84" target="_blank">Wikisource 維基文庫</a>
+                    and <a href="https://www.shidianguji.com" target="_blank">識典古籍</a>.
+                    Page compiled by Shuyi Ma, April 2026.
+                </p>
+</div>
+</main><!-- end .main-area -->
+</div><!-- end .page-layout -->
+<script>
+        const periods = ['1625', '1626', '1627', '1628', '1637', '1638', '1645', '1646', '1647', '附錄'];
+        let activePeriod = '1625';
+        let activeTheme = 'all';
+        let activePerson = 'all';
+        let searchQuery = '';
+
+        const entryData = [];
+        function initData() {
+            document.querySelectorAll('.sillok-entry').forEach(entry => {
+                const textEl = entry.querySelector('.entry-text');
+                const noteEl = entry.querySelector('.entry-note');
+                entryData.push({
+                    element: entry,
+                    textEl: textEl,
+                    noteEl: noteEl,
+                    originalText: textEl ? textEl.innerHTML : '',
+                    originalNote: noteEl ? noteEl.innerHTML : '',
+                    themes: (entry.dataset.themes || '').split(' '),
+                    persons: (entry.dataset.persons || '').split(' '),
+                    section: entry.closest('.period-section')
+                });
+            });
+        }
+
+        function getHighlightedHTML(html, query) {
+            if (!query) return html;
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return html.replace(regex, '<mark>$1</mark>');
+        }
+
+        function update() {
+            let totalVisible = 0;
+            const query = searchQuery.toLowerCase();
+            const isSearching = query !== '';
+
+            entryData.forEach(data => {
+                const periodMatch = isSearching || activePeriod === 'all' || (data.section && data.section.dataset.period === activePeriod);
+                const themeMatch = activeTheme === 'all' || data.themes.includes(activeTheme);
+                const personMatch = activePerson === 'all' || data.persons.includes(activePerson);
+                const searchMatch = !isSearching || (data.originalText + ' ' + (data.originalNote || '')).toLowerCase().includes(query);
+
+                const show = periodMatch && themeMatch && personMatch && searchMatch;
+                data.element.style.display = show ? 'block' : 'none';
+
+                if (show) {
+                    totalVisible++;
+                    if (isSearching) {
+                        if (data.textEl) data.textEl.innerHTML = getHighlightedHTML(data.originalText, searchQuery);
+                        if (data.noteEl) data.noteEl.innerHTML = getHighlightedHTML(data.originalNote, searchQuery);
+                    } else {
+                        if (data.textEl) data.textEl.innerHTML = data.originalText;
+                        if (data.noteEl) data.noteEl.innerHTML = data.originalNote;
+                    }
+                }
+            });
+
+            document.querySelectorAll('.period-section').forEach(section => {
+                const sectionPeriod = section.dataset.period;
+                const sectionHasVisibleEntries = Array.from(section.querySelectorAll('.sillok-entry')).some(e => e.style.display !== 'none');
+                
+                if (isSearching || activePeriod === 'all') {
+                    section.style.display = sectionHasVisibleEntries ? 'block' : 'none';
+                } else {
+                    section.style.display = (sectionPeriod === activePeriod) ? 'block' : 'none';
+                }
+            });
+
+            const noResults = document.getElementById('no-results');
+            if (noResults) noResults.style.display = totalVisible === 0 ? 'block' : 'none';
+
+            if (activePeriod === '1627' || isSearching) {
+                setTimeout(initBunjyoMap, 300);
+            }
+        }
+
+        function updateSidebar() {
+            document.querySelectorAll('.period-nav-list button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.period === activePeriod);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initData();
+            update();
+            updateSidebar();
+
+            document.querySelectorAll('.period-nav-list button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activePeriod = btn.dataset.period;
+                    update();
+                    updateSidebar();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+
+            document.querySelectorAll('#theme-filters .pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#theme-filters .pill').forEach(p => p.classList.remove('active'));
+                    btn.classList.add('active');
+                    activeTheme = btn.dataset.theme;
+                    update();
+                });
+            });
+
+            document.querySelectorAll('#person-filters .pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#person-filters .pill').forEach(p => p.classList.remove('active'));
+                    btn.classList.add('active');
+                    activePerson = btn.dataset.person;
+                    update();
+                });
+            });
+
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                update();
+            });
+
+            const toggleBtn = document.getElementById('toggle-btn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    document.getElementById('sidebar').classList.toggle('collapsed');
+                });
+            }
+        });
+
+        function initBunjyoMap() {
+            const el = document.getElementById('bunjyo-map');
+            if (!el || window._bunjyoMap || el.offsetParent === null) return;
+            
+            const bMap = L.map('bunjyo-map').setView([36.8, 127], 7);
+            window._bunjyoMap = bMap;
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
+            }).addTo(bMap);
+
+            const locations = [
+                { name: '漢城 (Hanseong)', lat: 37.5665, lng: 126.9780, color: '#2c3e50' },
+                { name: '江華島 (Ganghwa)', lat: 37.7467, lng: 126.4878, color: '#c0392b' },
+                { name: '全州 (Jeonju)', lat: 35.8242, lng: 127.1480, color: '#e67e22' }
+            ];
+
+            locations.forEach(loc => {
+                L.circleMarker([loc.lat, loc.lng], {
+                    radius: 8, fillOpacity: 0.8, color: 'white', weight: 2, fillColor: loc.color
+                }).addTo(bMap).bindPopup(`<b>${loc.name}</b>`);
+            });
+        }
+    </script>
+</body>
+</html>

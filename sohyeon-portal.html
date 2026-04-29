@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prince Sohyeon Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Garamond', 'Times New Roman', serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        /* Header and Navigation */
+        header {
+            background: linear-gradient(135deg, rgba(44, 62, 80, 0.8) 0%, rgba(52, 73, 94, 0.8) 100%),
+                        url('shengjing_map_header.jpg') center/cover no-repeat;
+            background-attachment: fixed;
+            color: white;
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .page#joseonsillok .container {
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        .page#joseonsillok main {
+            padding: 0;
+            max-width: 100%;
+            margin: 0;
+        }
+
+        .page#joseonsillok {
+            padding: 0;
+            margin: 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .site-title {
+            font-size: 26px;
+            font-weight: 700;
+            text-decoration: none;
+            color: white;
+            letter-spacing: 0.3px;
+            font-family: 'Playfair Display', 'Georgia', serif;
+            transition: all 0.3s ease;
+        }
+
+        .site-title:hover {
+            color: #a8d8ff;
+            text-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        nav a:hover {
+            color: #a8d8ff;
+            transform: translateY(-2px);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #a8d8ff, #e67e22);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        nav a.active {
+            color: #a8d8ff;
+        }
+
+        nav a.active::after {
+            width: 100%;
+            background: linear-gradient(90deg, #a8d8ff, #e67e22);
+        }
+
+        /* Main Content */
+        main {
+            min-height: 600px;
+            padding: 40px 0;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Home Page */
+        .hero {
+            background: url('shenyang_diary.jpg') center 30%/cover no-repeat,
+                        linear-gradient(135deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.45) 100%);
+            background-blend-mode: overlay;
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            min-height: 400px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .intro-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            color: #5a7a8c;
+            margin-bottom: 15px;
+            font-size: 22px;
+            font-family: 'Playfair Display', 'Georgia', serif;
+        }
+
+        .card p {
+            color: #555;
+            line-height: 1.8;
+        }
+
+        /* Content Sections */
+        .content-section {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .content-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 32px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        .content-section h3 {
+            color: #34495e;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .content-section p {
+            margin-bottom: 15px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .timeline-date {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 120px;
+            padding-right: 20px;
+        }
+
+        .timeline-content {
+            flex-grow: 1;
+            padding-left: 20px;
+            border-left: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .timeline-content h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .timeline-content p {
+            margin: 0;
+            color: #666;
+        }
+
+        /* Decorative line under debate title */
+        .debate-title {
+            border-bottom: none !important;
+        }
+
+        .debate-title::after {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 2px;
+            margin-top: 20px;
+            background-color: #8b9ca8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table th {
+            background-color: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 60px;
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 15px;
+                font-size: 14px;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .content-section {
+                padding: 20px;
+            }
+
+            .content-section h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="javascript:void(0)" class="site-title" onclick="showPage('home')">Prince Sohyeon Portal</a>
+                <nav>
+                    <ul>
+                        <li><a onclick="showPage('home')" class="nav-link active">Home</a></li>
+                        <li><a onclick="showPage('joseonsillok')" class="nav-link">Chosŏn Sillok</a></li>
+                        <li><a onclick="showPage('route')" class="nav-link">Path to Mukden</a></li>
+                        <li><a onclick="showPage('timeline')" class="nav-link">Chronological Line</a></li>
+                        <li><a onclick="showPage('debate')" class="nav-link">Injo Controversy</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Remove original site navigation overlay if present -->
+    <style>
+        nav[class*="global"], .global-nav, .site-nav:not(.header-content nav) {
+            display: none !important;
+        }
+    </style>
+
+    <main class="container">
+        <!-- Home Page -->
+        <div id="home" class="page active">
+            <div class="hero">
+                <h1>Prince Sohyeon of Chosŏn</h1>
+                <p>昭顯世子 (1612–1645)</p>
+                <p style="font-size: 18px; margin-top: 15px; line-height: 1.7; max-width: 1000px; margin-left: auto; margin-right: auto;">The eldest son and crown prince of King Injo, Sohyeon was held as a state hostage in Mukden for eight years following the Second Manchu Invasion, where he encountered Western learning and Catholicism through Jesuit missionaries.</p>
+            </div>
+
+            <div class="intro-section">
+                <div class="card">
+                    <h3>Sohyeon's Death: Disease or Poison?</h3>
+                    <img src="olbbaemi_poster.jpg" alt="Olbbaemi (2022) - Korean Historical Film" style="width: 100%; border-radius: 6px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <p>The mysterious circumstances surrounding Prince Sohyeon's sudden death in 1645 remain one of Korea's greatest historical mysteries. Was it natural illness or political assassination? This question continues to captivate historians and audiences alike.</p>
+                </div>
+                <div class="card">
+                    <h3>Intellectual Legacy</h3>
+                    <img src="sohyeon_book_cover.jpg" alt="소현세자는 말이 없다 - Korean Historical Book" style="width: 100%; border-radius: 6px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <p>Known for his exceptional scholarship and progressive thinking, Sohyeon advocated for institutional reforms and promoted Western knowledge through Catholic influence, making him a unique figure in Chosŏn intellectual history.</p>
+                </div>
+                <div class="card">
+                    <h3>The Second Manchu Invasion</h3>
+                    <img src="the_fortress_poster.png" alt="The Fortress - Korean Historical Film" style="width: 100%; border-radius: 6px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <p>As a hostage during the Second Jurchen Invasion (1637), Sohyeon's experiences in Mukden profoundly affected him. His time as a captive became a defining moment that influenced both his thinking and his relationship with the Chosŏn court.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Chosŏn Sillok Page -->
+        <div id="joseonsillok" class="page" style="width: 100%; margin: 0; padding: 0;">
+            <iframe src="sohyeon_sillok_portal.html" style="width: 100vw; height: calc(100vh - 80px); border: none; display: block; margin: 0; padding: 0; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw;" title="Comprehensive Chosŏn Sillok Database for Prince Sohyeon"></iframe>
+        </div>
+
+        <!-- Path to Mukden Page -->
+        <div id="route" class="page" style="width: 100%; margin: 0; padding: 0;">
+            <iframe src="route_map_portal.html" style="width: 100vw; height: calc(100vh - 80px); border: none; display: block; margin: 0; padding: 0; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw;" title="Interactive Route Map: Simyang Changgye"></iframe>
+        </div>
+
+        <!-- Original Route Content (kept for reference) -->
+        <div id="route-original" class="page" style="display: none;">
+            <div class="content-section">
+                <h2>Prince Sohyeon's Path to Mukden (1637)</h2>
+                <p>The Second Jurchen Invasion of 1637 (Byeongja Horan) forced Chosŏn's surrender and resulted in Prince Sohyeon's capture and transportation to Mukden, which would become his home for the next eight years.</p>
+
+                <h3>Historical Context: The Byeongja Horan</h3>
+                <p>In 1636, the Later Jin state (under the Qing) demanded Chosŏn's submission. When King Injo refused, the Qing army invaded, rapidly overwhelming Chosŏn's defenses. The royal court fled the capital (Seoul) and eventually took refuge at Namhan Sanseong fortress, a strategic mountain stronghold near Seoul. After a prolonged siege, facing starvation and military defeat, King Injo was forced to surrender in January 1637.</p>
+
+                <h3>Journey to Captivity</h3>
+
+                <h4>Stage 1: Seoul to Namhan Sanseong (Late 1636)</h4>
+                <p>When Qing forces invaded, the royal family fled Seoul northward. Prince Sohyeon was approximately 24 years old. The court made its way to Namhan Sanseong (남한산성), a fortress located south of Seoul in present-day Icheon, Gyeonggi Province. This journey took place during winter, adding to the hardship.</p>
+
+                <h4>Stage 2: Namhan Sanseong Siege (December 1636 – January 1637)</h4>
+                <p>The fortress was surrounded by Qing armies led by Hong Taiji. Despite stubborn resistance, the siege lasted about 47 days. Facing impossible odds and starving soldiers, King Injo decided to surrender on January 30, 1637. As part of the surrender agreement, Prince Sohyeon, along with other members of the royal family and officials, were designated as hostages to ensure Chosŏn's compliance with Qing demands.</p>
+
+                <h4>Stage 3: Captives' Route to Mukden</h4>
+                <p>After the surrender at Namhan Sanseong, Prince Sohyeon and other royal captives began their northward journey to Mukden (瀋陽), the capital of the Later Jin/Early Qing state. The journey covered approximately 900 km and likely took several weeks.</p>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date">Jan 1637</div>
+                        <div class="timeline-content">
+                            <h4>Surrender at Namhan Sanseong</h4>
+                            <p>King Injo surrenders after 47-day siege. Prince Sohyeon is designated as a state hostage.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">Jan–Feb 1637</div>
+                        <div class="timeline-content">
+                            <h4>Journey North</h4>
+                            <p>Sohyeon and other captives travel north through Korean territory toward Manchuria in winter conditions. The journey is arduous, with records indicating harsh treatment and difficult travel conditions.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">Feb 1637</div>
+                        <div class="timeline-content">
+                            <h4>Cross into Manchuria</h4>
+                            <p>The captive party crosses the northern border from Korea into Manchuria (present-day northeast China). Prince Sohyeon enters Jurchen-controlled territory.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">Mar 1637</div>
+                        <div class="timeline-content">
+                            <h4>Arrival in Mukden</h4>
+                            <p>After approximately 4–6 weeks of travel, Prince Sohyeon and the royal captives arrive in Mukden, the Later Jin capital. Sohyeon is now approximately 1,000 km from his homeland.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Life as a Hostage</h3>
+                <p>Once in Mukden, Prince Sohyeon's status was complex. He was not treated as a common prisoner but rather as a high-value diplomatic hostage representing Chosŏn's commitment to the Qing. However, his freedom was extremely limited. Key aspects of his captivity included:</p>
+
+                <ul style="margin-left: 20px; line-height: 2;">
+                    <li><strong>Confined Residence:</strong> Sohyeon was housed in a designated compound but with strict movement restrictions.</li>
+                    <li><strong>Diplomatic Function:</strong> His presence in Mukden served as a guarantee of Chosŏn's compliance with Qing suzerainty.</li>
+                    <li><strong>Cultural Exposure:</strong> During his 8 years in Mukden, Sohyeon came into contact with Chinese imperial culture, Jesuit missionaries, and Western learning—experiences that would shape his later thinking.</li>
+                    <li><strong>Correspondence:</strong> Limited communication with Chosŏn court was permitted, through which Sohyeon's intellectual development was documented.</li>
+                </ul>
+
+                <h3>Return Journey (1645)</h3>
+                <p>After eight years of captivity, Prince Sohyeon was released in early 1645. The return journey from Mukden back to Seoul retraced the captives' original northward route but in reverse. Sohyeon departed Mukden in early 1645 and arrived back in Chosŏn just months before his sudden death in June 1645.</p>
+
+                <h3>Geographic Significance</h3>
+                <p>The journey from Seoul to Mukden spanned approximately 900 kilometers across Korean peninsula and into Manchuria. Key waypoints along the route included:</p>
+
+                <table>
+                    <tr>
+                        <th>Location</th>
+                        <th>Present-day Area</th>
+                        <th>Significance</th>
+                    </tr>
+                    <tr>
+                        <td>Seoul (漢城)</td>
+                        <td>Seoul, Korea</td>
+                        <td>Chosŏn capital; starting point</td>
+                    </tr>
+                    <tr>
+                        <td>Namhan Sanseong (南漢山城)</td>
+                        <td>Icheon, Gyeonggi Province, Korea</td>
+                        <td>Site of surrender in 1637</td>
+                    </tr>
+                    <tr>
+                        <td>Gaeseong (開城)</td>
+                        <td>Kaesong, North Korea</td>
+                        <td>Ancient Goryeo capital; on route northward</td>
+                    </tr>
+                    <tr>
+                        <td>Pyongyang (平壤)</td>
+                        <td>Pyongyang, North Korea</td>
+                        <td>Major Korean city on northward route</td>
+                    </tr>
+                    <tr>
+                        <td>Yalu River (鴨綠江)</td>
+                        <td>Korean-Manchurian border</td>
+                        <td>Border crossing into Jurchen territory</td>
+                    </tr>
+                    <tr>
+                        <td>Mukden (瀋陽)</td>
+                        <td>Shenyang, Liaoning Province, China</td>
+                        <td>Later Jin capital; destination (8-year captivity)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        </div>
+
+        <!-- Chronological Timeline Page -->
+        <div id="timeline" class="page" style="width: 100%; margin: 0; padding: 0;">
+            <iframe src="timeline_portal.html" style="width: 100vw; height: calc(100vh - 80px); border: none; display: block; margin: 0; padding: 0; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw;" title="Historical Timeline of Prince Sohyeon"></iframe>
+        </div>
+
+        <!-- Original Timeline Content (kept for reference) -->
+        <div id="timeline-original" class="page" style="display: none;">
+            <div class="content-section">
+                <h2>Chronological Line of Prince Sohyeon's Life</h2>
+                <p>A detailed timeline of major events in Prince Sohyeon's life, from birth to death and their historical significance.</p>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date">1612</div>
+                        <div class="timeline-content">
+                            <h4>Birth of Prince Sohyeon</h4>
+                            <p>Born as the eldest son of King Injo (仁祖) and Queen Han (Consort of the Inner Court). Chosŏn was entering a period of political and military instability. The birth of an heir was considered auspicious but the prince was born during a time of increasing tension with the Later Jin state.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">1613</div>
+                        <div class="timeline-content">
+                            <h4>Designation as Crown Prince (世子)</h4>
+                            <p>At age one, Sohyeon was formally designated as Crown Prince, the official heir apparent to the Chosŏn throne. This initiated his education under the best scholars and officials of the realm.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">1613–1636</div>
+                        <div class="timeline-content">
+                            <h4>Years of Scholarship and Education</h4>
+                            <p>Sohyeon received an exceptional education covering Confucian classics, history, astronomy, mathematics, and languages. He became fluent in Chinese and was noted for his exceptional intelligence and scholarly abilities. Court records indicate he mastered diverse subjects and showed unusual openness to diverse intellectual traditions.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">1627</div>
+                        <div class="timeline-content">
+                            <h4>First Jurchen Invasion (丁卯胡亂)</h4>
+                            <p>The Later Jin state invaded Chosŏn. Though successfully repelled, this was a warning sign of greater threats to come. At age 15, Sohyeon would have been aware of the military crisis facing his kingdom.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">1636–1637</div>
+                        <div class="timeline-content">
+                            <h4>Second Jurchen Invasion (丙子胡亂) – The Crisis</h4>
+                            <p>The Later Jin (renamed Qing in 1636) invades Chosŏn with overwhelming force. King Injo flees Seoul and takes refuge at Namhan Sanseong fortress. After a 47-day siege, facing starvation, Injo is forced to surrender on January 30, 1637. Prince Sohyeon, age 24, is designated as a state hostage to guarantee Chosŏn's submission.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">1637–1645</div>
+                        <div class="timeline-content">
+                            <h4>Eight Years of Captivity in Mukden</h4>
+                            <p>Sohyeon is transported to Mukden, the Qing capital, where he is held as a political hostage. During these eight years, he is exposed to Qing imperial culture, Chinese intellectual traditions, and Western learning through Jesuit missionaries. This period profoundly shapes his thinking and worldview. He becomes exposed to Catholic theology and Western scientific knowledge—influences that would later make him controversial in conservative Chosŏn society.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">1645 (Early)</div>
+                        <div class="timeline-content">
+                            <h4>Release and Return to Chosŏn</h4>
+                            <p>After eight years, Sohyeon is released as part of improving Qing-Chosŏn relations. He undertakes the long journey back from Mukden to Seoul, retracing the route of his captivity. His return to court is initially celebrated but quickly becomes the subject of intense controversy.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">1645 (Spring–Summer)</div>
+                        <div class="timeline-content">
+                            <h4>Return to Court and Controversy</h4>
+                            <p>Upon returning to the Chosŏn court, Sohyeon advocates for reforms and demonstrates openness to Western learning and Catholicism—radical positions that deeply shock conservative scholars and officials. The debate (鄂論 or Oron) over his ideas becomes heated. Some officials and scholars view his proposals as dangerous innovations that threaten Chosŏn's Confucian order, while others see him as a visionary reformer.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">June 15, 1645</div>
+                        <div class="timeline-content">
+                            <h4>Sudden Death of Prince Sohyeon</h4>
+                            <p>Prince Sohyeon dies unexpectedly on June 15, 1645, at age 33, just months after his return to Chosŏn. Official records attribute his death to illness (possibly smallpox or another epidemic disease), but contemporary accounts and later historians have speculated about possible assassination or poisoning given the political controversy surrounding his return and proposed reforms.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">1645–1649</div>
+                        <div class="timeline-content">
+                            <h4>Political Aftermath and Succession Crisis</h4>
+                            <p>Sohyeon's death immediately creates a succession crisis. His young son, later known as King Hyeonjong, becomes the new heir apparent. The court splits into factions debating the cause of Sohyeon's death and how to interpret his legacy. Some conservative scholars successfully marginalize his reform agenda, while his supporters struggle to preserve his memory and influence.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">1649–1659</div>
+                        <div class="timeline-content">
+                            <h4>Post-Sohyeon Era – Factionalism and Conservative Consolidation</h4>
+                            <p>After Sohyeon's death, conservative factions within the Chosŏn court dominate. The intellectual openness and reform ideas associated with Sohyeon are suppressed. His supporters face political persecution, and the court returns to orthodox Confucian positions. The questions surrounding his death remain unresolved, and his legacy becomes increasingly contested.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">1674–1720</div>
+                        <div class="timeline-content">
+                            <h4>Hyeonjong's Reign (Sohyeon's Son)</h4>
+                            <p>Sohyeon's son reigns as King Hyeonjong, becoming an indirect heir to his father's legacy. However, the deep factionalism of the court and the conservative reaction against Sohyeon's ideas continue to shape Chosŏn politics during this period.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">17th–20th Centuries</div>
+                        <div class="timeline-content">
+                            <h4>Historical Scholarship and Legacy</h4>
+                            <p>Sohyeon's life and death continue to fascinate historians and scholars. Different interpretations emerge: some see him as a visionary ahead of his time who understood the need for reform and modernization; others view him as a dangerous figure whose Western sympathies threatened Chosŏn's cultural identity. Modern Korean historians continue to debate his role in Korean intellectual history and the true cause of his death.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Injo Controversy Page -->
+        <div id="debate" class="page" style="background: url('shengjing_map.jpg') center/cover fixed no-repeat, linear-gradient(135deg, rgba(255, 255, 255, 0.90) 0%, rgba(245, 245, 245, 0.90) 100%); background-blend-mode: overlay; min-height: 100vh;">
+            <div class="content-section" style="text-align: center; padding: 60px 40px;">
+                <h2 class="debate-title" style="margin-bottom: 40px; color: #2c3e50; font-family: 'Playfair Display', 'Georgia', serif; font-size: 32px; font-weight: 700; letter-spacing: 0.5px;">身死之後：立長還是立嫡？</h2>
+                <p style="margin-bottom: 35px; font-size: 16px; color: #8b7355; font-family: 'Playfair Display', 'Georgia', serif; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase;">互動卡牌遊戲 · Interactive Card Game Experience</p>
+                <p style="margin-bottom: 25px; color: #3a3a3a; line-height: 1.95; font-size: 17px; font-family: 'Noto Serif TC', 'Georgia', serif; letter-spacing: 0.3px; font-weight: 400;">昭顯世子去世後，朝廷內大臣普遍認為世孫應該冊封太子。然而，仁祖對此卻有不同的想法，他將目光轉而投向了次子馮林大君的身上。一場宮廷君臣之間的辯論即將拉開帷幕。</p>
+                <p style="margin-bottom: 50px; color: #3a3a3a; line-height: 1.95; font-size: 16px; font-family: 'Georgia', serif; letter-spacing: 0.5px; font-weight: 400;">After Crown Prince Sohyeon's death, most officials in the court believed the grandson should be elevated as heir. Yet King Injo had different thoughts, turning his gaze toward his younger son, the Prince of Pongnim. A grand debate between the sovereign and his ministers is about to unfold in the royal court.</p>
+                <a href="injo_dialogue_cards.html" target="_blank" style="display: inline-block; background: url('shengjing_map.jpg') center/cover, linear-gradient(135deg, rgba(102, 126, 234, 0.75) 0%, rgba(118, 75, 162, 0.75) 100%); background-blend-mode: overlay; color: white; padding: 16px 48px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 18px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2); letter-spacing: 0.5px;">
+                    進入卡牌遊戲 → Open Card Game
+                </a>
+            </div>
+        </div>
+
+        <!-- Original Debate Content (kept for reference) -->
+        <div id="debate-original" class="page" style="display: none;">
+            <div class="content-section">
+                <h2>The Injo Controversy: Debates Surrounding Prince Sohyeon</h2>
+                <p>Prince Sohyeon's return to Chosŏn in 1645 sparked intense controversy centered on his ideas, his exposure to Western learning and Catholicism, and the circumstances of his sudden death. This section explores the major debates.</p>
+
+                <h3>1. The Cause of Death: Natural Illness or Assassination?</h3>
+
+                <h4>Official Position (Court Records)</h4>
+                <p>Official Chosŏn court records attribute Prince Sohyeon's death to sudden illness, possibly smallpox or another epidemic disease. This was the position endorsed by the court physicians and accepted in the initial official histories.</p>
+
+                <h4>Assassination Theory</h4>
+                <p>Many contemporary accounts and later historians have speculated that Sohyeon was poisoned or assassinated due to the intense political controversy surrounding his return. Several factors support this theory:</p>
+                <ul style="margin-left: 20px; line-height: 2;">
+                    <li>The sudden nature of his death (just months after return) at a relatively young age (33)</li>
+                    <li>The extreme political controversy generated by his proposed reforms</li>
+                    <li>Reports from the time suggesting suspicious circumstances</li>
+                    <li>The fact that his death conveniently eliminated a politically divisive figure</li>
+                    <li>Conservative factions' strong opposition to his Western sympathies</li>
+                </ul>
+
+                <p><strong>Historical Assessment:</strong> Modern scholars remain divided. The truth of Sohyeon's death may never be definitively established, as evidence is fragmentary and later records may have been revised for political reasons.</p>
+
+                <h3>2. His Exposure to Western Learning and Catholicism</h3>
+
+                <h4>The Progressive View</h4>
+                <p>Some scholars argue that Sohyeon's exposure to Western knowledge and Catholicism made him a visionary intellectual ahead of his time. According to this interpretation:</p>
+                <ul style="margin-left: 20px; line-height: 2;">
+                    <li>He recognized the need for reform and modernization to strengthen Chosŏn</li>
+                    <li>His openness to Western learning was pragmatic, not ideological</li>
+                    <li>His advocacy for religious tolerance showed moral courage</li>
+                    <li>Had he lived, he might have guided Chosŏn toward earlier modernization</li>
+                </ul>
+
+                <h4>The Conservative View</h4>
+                <p>Conservative scholars and officials of his time (and some modern historians) argued that his Western sympathies were dangerous:</p>
+                <ul style="margin-left: 20px; line-height: 2;">
+                    <li>Catholicism was fundamentally incompatible with Confucian orthodoxy</li>
+                    <li>Western learning threatened Korean cultural identity</li>
+                    <li>His proposed reforms would undermine royal authority and established order</li>
+                    <li>His views were acquired during captivity and represented "barbarian" contamination</li>
+                </ul>
+
+                <h3>3. King Injo's Role and Responsibility</h3>
+
+                <h4>Questions About Injo's Authority</h4>
+                <p>Some historians debate whether King Injo bore responsibility for his son's death or circumstances:</p>
+                <ul style="margin-left: 20px; line-height: 2;">
+                    <li><strong>Did Injo order Sohyeon's death?</strong> – Some historians speculate that Injo, facing court pressure, may have authorized Sohyeon's elimination.</li>
+                    <li><strong>Could Injo have prevented his death?</strong> – If assassination occurred, could the aging king have protected his son against conservative factions?</li>
+                    <li><strong>Injo's own guilt:</strong> Having surrendered to the Qing (a deeply shameful act in Confucian terms), did Injo project his failure onto his son?</li>
+                </ul>
+
+                <h4>The Qing Connection</h4>
+                <p>Another debate centers on whether Qing interests were involved in Sohyeon's death:</p>
+                <ul style="margin-left: 20px; line-height: 2;">
+                    <li>Could the Qing have wanted to eliminate a potentially reform-minded heir?</li>
+                    <li>Did the Qing prefer a more conservative Chosŏn?</li>
+                    <li>What was the significance of Sohyeon's eight years of exposure to Qing court and culture?</li>
+                </ul>
+
+                <h3>4. The Oroan (鄂論) Controversy</h3>
+
+                <p>The "Oroan" or factional debate (also called the "Sohyeon Controversy") that erupted after his return centered on several issues:</p>
+
+                <h4>Religious Tolerance vs. Orthodoxy</h4>
+                <p>Sohyeon's openness to Catholicism shocked orthodox Confucians who saw the faith as incompatible with Chosŏn values. The debate reflected deeper questions about how Chosŏn should respond to foreign ideas.</p>
+
+                <h4>Institutional Reform vs. Preservation</h4>
+                <p>Sohyeon proposed various institutional reforms based on his observations of Qing governance. Conservative officials opposed these as threats to the established order. The debate exposed tensions between those who believed Chosŏn needed reform and those who defended the status quo.</p>
+
+                <h4>Royal Authority and Succession</h4>
+                <p>Questions arose about succession and the extent of the crown prince's authority. Could a crown prince advocate policies that contradicted the king's directives? How should succession be managed if the heir and king disagreed fundamentally?</p>
+
+                <h3>5. His Legacy: A Reformer or a Threat?</h3>
+
+                <h4>Modern Scholarly Interpretations</h4>
+
+                <table>
+                    <tr>
+                        <th>Interpretation</th>
+                        <th>Key Arguments</th>
+                        <th>Historical Significance</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Visionary Reformer</strong></td>
+                        <td>Sohyeon was ahead of his time, recognizing the need for reform and modernization to face Western and Qing threats.</td>
+                        <td>Had he lived, Chosŏn might have embarked on earlier modernization, potentially strengthening the dynasty.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Conservative Threat</strong></td>
+                        <td>His Western sympathies and religious heterodoxy threatened the foundation of Confucian Chosŏn society.</td>
+                        <td>His elimination allowed the conservative consolidation that defined late Chosŏn.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tragic Victim</strong></td>
+                        <td>Sohyeon was a brilliant prince caught in political forces beyond his control, destroyed by factionalism.</td>
+                        <td>His death exemplifies the destructive nature of Chosŏn factionalism and the cost of political division.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Qing Pawn</strong></td>
+                        <td>Sohyeon's eight years in Mukden were designed by the Qing to make him a more compliant vassal. His Western sympathies served Qing interests.</td>
+                        <td>His death might have been orchestrated to prevent a reformer from weakening Chosŏn's subservience to the Qing.</td>
+                    </tr>
+                </table>
+
+                <h3>Conclusion: Unsolved Mysteries</h3>
+                <p>Prince Sohyeon remains one of Chosŏn's most enigmatic figures. Several fundamental questions remain unanswered:</p>
+
+                <ul style="margin-left: 20px; line-height: 2;">
+                    <li><strong>How did he really die?</strong> Was it natural illness, assassination, or poisoning?</li>
+                    <li><strong>What were his true intentions?</strong> Was he a genuine reformer or a Qing agent?</li>
+                    <li><strong>What would Chosŏn have been like if he had lived?</strong> Would his reforms have strengthened or weakened the kingdom?</li>
+                    <li><strong>What is his true legacy?</strong> Should he be remembered as a visionary or a cautionary tale about the dangers of foreign ideas?</li>
+                </ul>
+
+                <p>These questions continue to animate historical scholarship on Prince Sohyeon, ensuring that he remains a fascinating and contested figure in Korean history.</p>
+            </div>
+        </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Prince Sohyeon Portal. Historical resources and scholarly content.</p>
+        <p>Last updated: 2026</p>
+    </footer>
+
+    <script>
+        function showPage(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+
+            // Show selected page
+            const selectedPage = document.getElementById(pageId);
+            if (selectedPage) {
+                selectedPage.classList.add('active');
+            }
+
+            // Update active nav link
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => link.classList.remove('active'));
+
+            // Find and activate the correct nav link
+            const activeLink = Array.from(navLinks).find(link =>
+                link.onclick && link.onclick.toString().includes(`'${pageId}'`)
+            );
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+</html>

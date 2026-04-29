@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Route Map: Simyang Changgye (1637) — Shuyi Ma</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        /* Override body max-width for map page */
+        body {
+            max-width: 1200px;
+            padding: 20px 30px;
+            margin: 0 auto;
+            width: calc(100% - 60px);
+            overflow-x: hidden;
+        }
+
+        html {
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        .page-intro {
+            background: rgba(44, 62, 80, 0.06);
+            border-left: 4px solid #2c3e50;
+            padding: 16px 20px;
+            margin-bottom: 28px;
+            font-size: 18px;
+            line-height: 1.7;
+            border-radius: 0 6px 6px 0;
+        }
+
+        /* Map + sidebar layout */
+        .map-container {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            margin-bottom: 36px;
+        }
+
+        #map {
+            flex: 1 1 0;
+            height: 620px;
+            border: 2px solid #c9b99a;
+            border-radius: 8px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.13);
+            min-width: 0;
+            position: relative;
+        }
+
+        /* Fullscreen styles for Leaflet map */
+        #map:fullscreen {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            border-radius: 0;
+        }
+
+        /* Sidebar list */
+        .sidebar {
+            width: 270px;
+            flex-shrink: 0;
+            height: 620px;
+            overflow-y: auto;
+            border: 1px solid #d5c9b5;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .sidebar h3 {
+            font-size: 16px;
+            padding: 12px 14px 8px;
+            color: #2c3e50;
+            border-bottom: 1px solid #e0d8cc;
+            position: sticky;
+            top: 0;
+            background: rgba(245, 242, 235, 0.97);
+            z-index: 10;
+            letter-spacing: 0.5px;
+        }
+
+        .stop-item {
+            padding: 8px 14px;
+            border-bottom: 1px solid #ede8df;
+            cursor: pointer;
+            transition: background 0.18s;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .stop-item:hover {
+            background: rgba(243, 156, 18, 0.12);
+        }
+
+        .stop-item.active {
+            background: rgba(44, 62, 80, 0.1);
+        }
+
+        .stop-num {
+            font-size: 11px;
+            font-weight: bold;
+            color: #888;
+            min-width: 20px;
+            padding-top: 3px;
+        }
+
+        .stop-name {
+            font-size: 14px;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
+        .stop-region {
+            font-size: 12px;
+            color: #888;
+            line-height: 1.3;
+        }
+
+        .section-divider {
+            padding: 6px 14px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        /* Legend */
+        .map-legend {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Historical map section */
+        .historical-map-section {
+            margin-top: 36px;
+            padding-top: 24px;
+            border-top: 1px solid #ddd;
+        }
+
+        .historical-map-section h2 {
+            margin-top: 0;
+        }
+
+        .hist-map-viewport {
+            width: 100%;
+            max-width: 1000px;
+            height: 600px;
+            overflow: hidden;
+            border: 2px solid #c9b99a;
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            background: #e9e4d4;
+            position: relative;
+            cursor: grab;
+            margin-top: 16px;
+            margin-bottom: 12px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hist-map-viewport:active {
+            cursor: grabbing;
+        }
+
+        /* Fullscreen styles for historical map */
+        .hist-map-viewport:fullscreen {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            border-radius: 0;
+            background: #000;
+        }
+
+        /* Fullscreen Toggle Buttons */
+        .fs-toggle-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 36px;
+            height: 36px;
+            background: rgba(44, 62, 80, 0.85);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .fs-toggle-btn:hover {
+            background: rgba(243, 156, 18, 0.9);
+        }
+
+        .hist-map-container {
+            position: absolute;
+            transform-origin: 0 0;
+            display: inline-block;
+        }
+
+        .hist-map-img {
+            display: block;
+            width: 800px;
+            /* Base width before zoom */
+            height: auto;
+            pointer-events: none;
+            /* Let container handle dragged events */
+        }
+
+        .hist-pin {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #c0392b;
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+            transition: background 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .hist-pin:hover {
+            box-shadow: 0 0 0 4px rgba(243, 156, 18, 0.4);
+            background: #f39c12;
+            z-index: 10;
+        }
+
+        .hist-pin-tooltip {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 11;
+        }
+
+        .hist-pin:hover .hist-pin-tooltip {
+            opacity: 1;
+        }
+
+        /* Custom Hover Tooltip */
+        .custom-tooltip-trigger {
+            position: relative;
+            border-bottom: 1px dotted #7a3b00;
+            cursor: help;
+            display: inline-block;
+        }
+
+        .custom-tooltip-text {
+            visibility: hidden;
+            width: 260px;
+            background-color: #2c3e50;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px 14px;
+            position: absolute;
+            z-index: 10000;
+            bottom: 135%;
+            left: 50%;
+            margin-left: -130px;
+            opacity: 0;
+            transition: opacity 0.2s, bottom 0.2s;
+            font-size: 13px;
+            font-style: normal;
+            line-height: 1.5;
+            font-weight: normal;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            pointer-events: none;
+        }
+
+        .custom-tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #2c3e50 transparent transparent transparent;
+        }
+
+        .custom-tooltip-trigger:hover .custom-tooltip-text {
+            visibility: visible;
+            opacity: 1;
+            bottom: 120%;
+        }
+
+        /* Leaflet popup customization */
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: rgba(249, 246, 240, 0.97);
+            border: 1px solid #c9b99a;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+        }
+
+        .popup-content h4 {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 4px;
+        }
+
+        .popup-content .popup-num {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .popup-content .popup-meta {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        .popup-content .popup-context {
+            font-size: 13px;
+            color: #7a3b00;
+            font-style: italic;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #eee;
+        }
+
+        @media (max-width: 800px) {
+            .map-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 220px;
+            }
+
+            #map {
+                height: 400px;
+            }
+
+            .hist-map-wrapper {
+                flex-direction: column;
+            }
+
+            .hist-map-img {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Interactive Route Map: <em>Simyang Changgye</em></h1>
+    <p style="color:#888;font-size:16px;margin-bottom:12px;">The Journey from Chosŏn to Shenyang · 1637</p>
+
+    <div class="page-intro">
+        <strong>The <em>Simyang Changgye</em> (瀋陽狀啓)</strong> is a record of the eight-year reports submitted to the
+        Royal Secretariat (Seungjeongwon) by the accompanying ministers and royal lecturers of the Crown Prince Tutorial
+        Office (Sigangwon). These reports were sent between 1637 (the 15th year of King Injo) and 1643, while Crown
+        Prince Sohyeon, Grand Prince Bongrim (later King Hyojong), and their accompanying officials from the Chosŏn
+        Dynasty were held hostage in Shenyang, Qing Dynasty. The routes on this map are summarized and extracted from
+        the first volume.
+    </div>
+
+    <div class="map-legend">
+        <div class="legend-item">
+            <div class="legend-dot" style="background:#c0392b;"></div>
+            <span>Chosŏn Territory (Gyeonggi, Hwanghae, Pyeongan)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background:#2471a3;"></div>
+            <span>Qing Territory (Liaodong / Shengjing)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background:#f39c12; width:16px; height:16px; border-radius:3px;"></div>
+            <span>Yalu River Crossing</span>
+        </div>
+        <div class="legend-item">
+            <div
+                style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #c0392b; margin-right: 2px;">
+            </div>
+            <span>Historical Landmark (Not part of Crown Prince's route)</span>
+        </div>
+    </div>
+
+    <div class="map-container">
+        <div id="map">
+            <button class="fs-toggle-btn" id="btn-fs-main" title="Toggle Fullscreen">⛶</button>
+        </div>
+        <div class="sidebar">
+            <h3>📍 Route Stops</h3>
+            <div id="stop-list"></div>
+        </div>
+    </div>
+
+    <!-- Historical map section -->
+    <div class="historical-map-section">
+        <h2>Spots on 18th-Century Chosŏn Map</h2>
+
+        <div class="hist-map-viewport" id="hist-map-viewport">
+            <button class="fs-toggle-btn" id="btn-fs-hist" title="Toggle Fullscreen">⛶</button>
+            <div class="hist-map-container" id="hist-map-container">
+                <img id="hist-map-img" class="hist-map-img" src="joseon_map.jpg"
+                    alt="17th Century Map of the Korean Peninsula">
+            </div>
+        </div>
+
+        <div class="hist-map-caption">
+            💡 Tip: Scroll to zoom, drag to pan &nbsp;·&nbsp;
+            <em>Paldo Chongdo</em> (八道總圖), from <em>Paldo Chido</em> 《八道地圖》(奎10331), ca. 1776–1787.
+            Manuscript. Kyujanggak Institute for Korean Studies, Seoul National University.
+        </div>
+
+        <div style="margin-top: 24px; padding: 16px; background: rgba(44, 62, 80, 0.06); border-left: 4px solid #2c3e50; border-radius: 0 6px 6px 0;">
+            <h3 style="margin-top: 0; margin-bottom: 12px; color: #2c3e50;">Custom Map Annotation Tool</h3>
+            <p style="margin-bottom: 12px; color: #555;">Use the interactive Historical Map Annotator to add your own custom marks, labels, and annotations to this 18th-century Chosŏn map.</p>
+            <a href="map_annotator_portal.html" target="_blank" style="display: inline-block; background-color: #667eea; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; transition: background-color 0.3s;">
+                Open Map Annotator Tool →
+            </a>
+        </div>
+    </div>
+
+    <footer>
+    </footer>
+
+    <script>
+        // ── Data: 33 stops from the Simyang Changgye ──
+        const stops = [
+            // Korea section
+            { id: "ref", name: "南漢城", region: "Gyeonggi Province (Gwangju)", country: "South Korea", context: "King Injo fled here during the Qing invasion. On the 9th day, Chosŏn officials reported to Qing Gen. Ma that soldiers were still being captured here despite the peace agreement. They presented Nam-i, servant of <span class='custom-tooltip-trigger'>Yi Si-baek<span class='custom-tooltip-text'>Yi Si-baek (1581-1660) was a mid-Chosŏn minister. In 1636, King Injo appointed him Vice Minister of War and Commander of Namhansanseong Defense. He defended the western wall during the Qing invasion (Byeongja Horan). Later, as Minister of War, he sent his legitimate son to Shengjing as a hostage but secretly replaced him with an illegitimate son. Discovered by the Qing in 1640, he was exiled before being released the next year.</span></span> who had been captured under the walls on the 2nd day. Confronted with this evidence, Gen. Ma ordered an investigation.<br><br>有旨。初九日，臣等在坡州梨川邊祗受，爲白有在果，臣𥶇、臣潢卽以有旨內辭緣，往見馬將，反覆開說則，馬將以爲：「講和之後，萬無此理，無乃中間虛說是如。」辭氣落落，不爲信聽爲白去乙，臣等以路中適値李時白奴子男伊稱名人，初二日被擄於南漢城下，方在陣中，一行下人明白相見之意，立證明其實狀則，馬將曰：「果若此言，極爲不當，不可不明白處置。」云云。使其胡人及得見男伊人，同力訪問爲白乎矣。時未覓得而，終乃得見則，必有査覈處置之事，是白齊。", lat: 37.480, lng: 127.179, imgX: 37.18, imgY: 58.97, type: "triangle" },
+            { id: 1, name: "高陽郡", region: "Gyeonggi Province", country: "South Korea", context: "Overnight stop for the Crown Prince，王世子行次初八日高陽郡別堂止宿。", lat: 37.658, lng: 126.832, imgX: 34.59, imgY: 56.08 },
+            { id: 2, name: "城外·梨川", region: "Gyeonggi Province", country: "South Korea", context: "Where royal orders were received，有旨初九日臣等在坡州梨川邊祗受爲白有在果；初九日過坡州十里許梨川邊止宿。", lat: 37.790, lng: 126.855 },
+            { id: 3, name: "積城·尺灘", region: "Gyeonggi Province", country: "South Korea", context: "River crossing point，由積城地尺灘則，灘水甚淺，無事渡涉。", lat: 37.867, lng: 126.700, imgX: 35.81, imgY: 53.41 },
+            { id: 4, name: "長湍（板浮村·板門）", region: "Gyeonggi Province", country: "South Korea (near DMZ)", context: "Overnight stop，過五里許，到長湍板浮村，村家止宿。當日前進，長湍板門近處止宿，計料爲白在果。", lat: 37.940, lng: 126.670, imgX: 33.30, imgY: 52.94 },
+            { id: 5, name: "松都（開城府）", region: "Gyeonggi Province", country: "North Korea", context: "Stop for collecting grain provisions", lat: 37.970, lng: 126.560, imgX: 30.92, imgY: 52.89 },
+            { id: 6, name: "平山·船岩村", region: "Hwanghae Province", country: "North Korea", context: "Overnight stop for the Crown Prince，本月十九日，在平山船岩村。", lat: 38.330, lng: 126.380, imgX: 29.25, imgY: 49.08 },
+            { id: 7, name: "長波串", region: "Hwanghae Province", country: "North Korea", context: "Overnight stop; kitchen caught fire，（十九日）同日發程，行三十里，到長波串閭舍止宿。", lat: 38.500, lng: 126.050 },
+            { id: 8, name: "鳳山（含溝·草阜·草丘）", region: "Hwanghae Province", country: "North Korea", context: "Multiple overnight sequences，二十日，二十里許，鳳山倉灘止宿爲白有矣。本月二十一日，在倉灘，世子行次緣由段，因開城都事洪霆差使員遞還時，已爲馳啓爲白有在果，同日到鳳山南面草阜村舍止宿，仍留三日而，彼人等言內，當留十餘日，以待後軍之追到，是如爲白乎矣。未知的實，是白齊。", lat: 38.680, lng: 125.900, imgX: 22.81, imgY: 46.06 },
+            { id: 9, name: "黃州", region: "Hwanghae Province", country: "North Korea", context: "Magistrate Yi Jo-sang sent relief horses", lat: 38.620, lng: 125.780, imgX: 23.29, imgY: 44.25 },
+            { id: 10, name: "中和邑", region: "Pyeongan Province (South)", country: "North Korea", context: "Overnight stop; post horses exchanged", lat: 38.920, lng: 125.760, imgX: 23.61, imgY: 42.65 },
+            { id: 11, name: "平壤·梨山", region: "Pyeongan Province (South)", country: "North Korea", context: "Overnight stop en route", lat: 39.030, lng: 125.750, imgX: 23.13, imgY: 40.69 },
+            { id: 12, name: "永柔縣（綠沙村）", region: "Pyeongan Province (South)", country: "North Korea", context: "Longest stay for the Crown Prince", lat: 39.280, lng: 125.600, imgX: 20.75, imgY: 37.82 },
+            { id: 13, name: "安州（長坪·橫瀝）", region: "Pyeongan Province (South)", country: "North Korea", context: "Conference held with Lord Ma", lat: 39.620, lng: 125.590, imgX: 22.66, imgY: 34.70 },
+            { id: 14, name: "肅川·碧柯汀", region: "Pyeongan Province (North)", country: "North Korea", context: "Field encampment", lat: 39.400, lng: 125.720, imgX: 22.42, imgY: 37.13 },
+            { id: 15, name: "嘉山·長串", region: "Pyeongan Province (North)", country: "North Korea", context: "Field encampment", lat: 39.750, lng: 125.850 },
+            { id: 16, name: "納淸亭", region: "Pyeongan Province (North)", country: "North Korea", context: "Landmark passed (near Chaesan)", lat: 39.900, lng: 125.700 },
+            { id: 17, name: "定州（鑑岩·玉汝洞）", region: "Pyeongan Province (North)", country: "North Korea", context: "Field encampment", lat: 39.860, lng: 125.320, imgX: 16.61, imgY: 34.70 },
+            { id: 18, name: "宜川·林群", region: "Pyeongan Province (North)", country: "North Korea", context: "Landmark passed en route", lat: 40.000, lng: 125.050, imgX: 12.56, imgY: 34.50 },
+            { id: 19, name: "鐵山·板橋", region: "Pyeongan Province (North)", country: "North Korea", context: "Field encampment", lat: 39.980, lng: 124.880, imgX: 9.46, imgY: 35.23 },
+            { id: 20, name: "牛鬙磁", region: "Pyeongan Province (North)", country: "North Korea", context: "Landmark passed (near Cheolsan)", lat: 40.080, lng: 124.600 },
+            { id: 21, name: "義州（古津江邊·古城倉）", region: "Pyeongan Province (North)", country: "North Korea", context: "Final stop before crossing Yalu River", lat: 40.105, lng: 124.390, imgX: 5.33, imgY: 30.70 },
+            // China section
+            { id: 22, name: "九連城", region: "Qing Shengjing (Liaodong)", country: "China (Dandong, Liaoning)", context: "First stop after crossing the river", lat: 40.120, lng: 124.380 },
+            { id: 23, name: "湯遠堡", region: "Qing Shengjing (Liaodong)", country: "China (Liaoning)", context: "Key waypoint en route", lat: 40.350, lng: 124.200 },
+            { id: 24, name: "湯站", region: "Qing Shengjing (Liaodong)", country: "China (Liaoning)", context: "Field encampment", lat: 40.500, lng: 124.050 },
+            { id: 25, name: "乾川", region: "Qing Shengjing (Liaodong)", country: "China (Liaoning)", context: "Field encampment", lat: 40.650, lng: 124.050 },
+            { id: 26, name: "獾項川", region: "Qing Shengjing (Liaodong)", country: "China (Liaoning)", context: "Field encampment", lat: 40.850, lng: 123.900 },
+            { id: 27, name: "連山館", region: "Qing Shengjing (Liaodong)", country: "China (Lianshanguan)", context: "Landmark passed en route", lat: 41.080, lng: 123.750 },
+            { id: 28, name: "甜水站", region: "Qing Shengjing (Liaodong)", country: "China (Liaoning)", context: "Overnight stop en route", lat: 41.200, lng: 123.300 },
+            { id: 29, name: "冷井", region: "Qing Shengjing (Liaodong)", country: "China (Liaoning)", context: "Field encampment", lat: 41.350, lng: 123.150 },
+            { id: 30, name: "燭流鋪", region: "Qing Shengjing (Liaodong)", country: "China (Liaoning)", context: "Field encampment", lat: 41.500, lng: 122.900 },
+            { id: 31, name: "白塔坪", region: "Qing Shengjing (Liaodong)", country: "China (Liaoning)", context: "Field encampment", lat: 41.620, lng: 123.100 },
+            { id: 32, name: "瀋陽", region: "Qing Shengjing (Capital)", country: "China (Shenyang, Liaoning)", context: "Final destination; Crown Prince's residence", lat: 41.806, lng: 123.432 },
+        ];
+
+        // ── Initialize Leaflet map ──
+        const map = L.map('map', {
+            center: [39.5, 125.5],
+            zoom: 6,
+            zoomControl: true,
+        });
+
+        // Base tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 18,
+        }).addTo(map);
+
+        // ── Color helpers ──
+        function markerColor(stop) {
+            if (stop.id === 21 || stop.id === 22) return '#f39c12'; // crossing area
+            if (stop.id === "ref" || stop.id <= 21) return '#c0392b'; // Korea
+            return '#2471a3'; // China
+        }
+
+        function createTriangleIcon(color) {
+            return L.divIcon({
+                className: '',
+                html: `<div style="
+                    width:0; height:0; 
+                    border-left: 14px solid transparent; 
+                    border-right: 14px solid transparent; 
+                    border-bottom: 24px solid ${color};
+                    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+                "></div>`,
+                iconSize: [28, 24],
+                iconAnchor: [14, 12],
+                popupAnchor: [0, -12],
+            });
+        }
+
+        function createCircleIcon(color, num) {
+            return L.divIcon({
+                className: '',
+                html: `<div style="
+                    width:26px; height:26px; border-radius:50%;
+                    background:${color}; border:2px solid white;
+                    box-shadow:0 2px 6px rgba(0,0,0,0.35);
+                    display:flex; align-items:center; justify-content:center;
+                    color:white; font-size:11px; font-weight:bold;
+                    font-family:Georgia,serif;
+                ">${num}</div>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13],
+                popupAnchor: [0, -16],
+            });
+        }
+
+        // ── Route polyline (Korea section + China section) ──
+        const routeStops = stops.filter(s => typeof s.id === 'number');
+        const koreaCoords = routeStops.filter(s => s.id <= 21).map(s => [s.lat, s.lng]);
+        const chinaCoords = routeStops.filter(s => s.id >= 21).map(s => [s.lat, s.lng]);
+
+        L.polyline(koreaCoords, {
+            color: '#c0392b',
+            weight: 3,
+            opacity: 0.75,
+            dashArray: '6,4',
+        }).addTo(map);
+
+        L.polyline(chinaCoords, {
+            color: '#2471a3',
+            weight: 3,
+            opacity: 0.75,
+            dashArray: '6,4',
+        }).addTo(map);
+
+        // ── Markers ──
+        const leafletMarkers = [];
+
+        stops.forEach((stop, idx) => {
+            const color = markerColor(stop);
+            let icon;
+            if (stop.type === "triangle") {
+                icon = createTriangleIcon(color);
+            } else {
+                icon = createCircleIcon(color, stop.id);
+            }
+
+            const popupHtml = `
+                <div class="popup-content">
+                    <div class="popup-num">${stop.id === "ref" ? "Historical Landmark" : "Stop " + stop.id}</div>
+                    <h4>${stop.name}</h4>
+                    <div class="popup-meta">🗺 ${stop.region}</div>
+                    <div class="popup-meta">📍 Mod. location: ${stop.country}</div>
+                    <div class="popup-context">📜 ${stop.context}</div>
+                </div>`;
+
+            const marker = L.marker([stop.lat, stop.lng], { icon })
+                .addTo(map)
+                .bindPopup(popupHtml, { className: 'custom-popup', maxWidth: 240 });
+
+            leafletMarkers.push(marker);
+        });
+
+        // ── Sidebar stop list ──
+        const listEl = document.getElementById('stop-list');
+        let dividerAdded = false;
+
+        stops.forEach((stop, idx) => {
+            // Section divider before stop 22 (China)
+            if (stop.id === 22 && !dividerAdded) {
+                dividerAdded = true;
+                const div = document.createElement('div');
+                div.className = 'section-divider';
+                div.textContent = '── Crossing the Yalu River into Qing ──';
+                listEl.appendChild(div);
+            }
+
+            const item = document.createElement('div');
+            item.className = 'stop-item';
+            item.id = `stop-item-${stop.id}`;
+            item.innerHTML = `
+                <div class="stop-num">${stop.id === "ref" ? "★" : stop.id}</div>
+                <div>
+                    <div class="stop-name">${stop.name}</div>
+                    <div class="stop-region">${stop.region}</div>
+                </div>`;
+
+            item.addEventListener('click', () => {
+                // Pan map to marker
+                map.flyTo([stop.lat, stop.lng], 9, { duration: 1 });
+                leafletMarkers[idx].openPopup();
+                // Highlight
+                document.querySelectorAll('.stop-item').forEach(el => el.classList.remove('active'));
+                item.classList.add('active');
+            });
+
+            listEl.appendChild(item);
+        });
+
+        // When popup opens, highlight sidebar item
+        stops.forEach((stop, idx) => {
+            leafletMarkers[idx].on('popupopen', () => {
+                document.querySelectorAll('.stop-item').forEach(el => el.classList.remove('active'));
+                const sideItem = document.getElementById(`stop-item-${stop.id}`);
+                if (sideItem) {
+                    sideItem.classList.add('active');
+                    sideItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+            });
+        });
+
+        // ── Historical Map Markers ──
+        const histMapContainer = document.getElementById('hist-map-container');
+        stops.filter(s => s.imgX && s.imgY).forEach(stop => {
+            const pin = document.createElement('div');
+            pin.className = 'hist-pin';
+            pin.style.left = `${stop.imgX}%`;
+            pin.style.top = `${stop.imgY}%`;
+
+            const tooltip = document.createElement('div');
+            tooltip.className = 'hist-pin-tooltip';
+            tooltip.textContent = `${stop.id}. ${stop.name}`;
+
+            pin.appendChild(tooltip);
+
+            // Link to modern map marker
+            pin.addEventListener('click', (e) => {
+                e.stopPropagation(); // prevent lightbox
+                
+                // Jump to the top map container
+                document.getElementById('map').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+
+                // Coordinate map movement and popup
+                map.flyTo([stop.lat, stop.lng], 9, { duration: 1 });
+                
+                const originalIdx = stops.indexOf(stop);
+                if (originalIdx !== -1 && leafletMarkers[originalIdx]) {
+                    // Slight delay to ensure the popup opens cleanly after the scroll starts
+                    setTimeout(() => {
+                        leafletMarkers[originalIdx].openPopup();
+                    }, 300);
+                }
+
+                // Highlight side list
+                document.querySelectorAll('.stop-item').forEach(el => el.classList.remove('active'));
+                const sideItem = document.getElementById(`stop-item-${stop.id}`);
+                if (sideItem) {
+                    sideItem.classList.add('active');
+                }
+            });
+
+            histMapContainer.appendChild(pin);
+        });
+
+        // ── Historical Map Pan/Zoom Logic ──
+        const viewport = document.getElementById('hist-map-viewport');
+
+        let histScale = 1;
+        let histX = 0;
+        let histY = 0;
+        let isDragging = false;
+        let startX, startY;
+
+        function updateHistTransform() {
+            histMapContainer.style.transform = `translate(${histX}px, ${histY}px) scale(${histScale})`;
+        }
+
+        // Mouse Drag Panning
+        viewport.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - histX;
+            startY = e.clientY - histY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            histX = e.clientX - startX;
+            histY = e.clientY - startY;
+            updateHistTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Wheel Zooming
+        viewport.addEventListener('wheel', (e) => {
+            e.preventDefault();
+
+            // Get mouse position relative to viewport
+            const rect = viewport.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Calculate zoom direction
+            const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
+            const newScale = Math.min(Math.max(0.5, histScale * zoomDelta), 5); // Clamped between 0.5x and 5x
+
+            if (newScale !== histScale) {
+                // Adjust translation to zoom in/out at the mouse pointer
+                histX = mouseX - (mouseX - histX) * (newScale / histScale);
+                histY = mouseY - (mouseY - histY) * (newScale / histScale);
+                histScale = newScale;
+                updateHistTransform();
+            }
+        }, { passive: false });
+
+        // Initial centering
+        function initializeHistMap() {
+            const vWidth = viewport.clientWidth;
+            const imgWidth = 800; // Image width from CSS
+
+            // Center the 800px wide image in viewport
+            histScale = 1;
+            histX = (vWidth - imgWidth) / 2;
+            histY = 0;
+
+            updateHistTransform();
+        }
+
+        // Initialize after DOM is ready
+        document.addEventListener('DOMContentLoaded', initializeHistMap);
+        // Also try after a small delay
+        setTimeout(initializeHistMap, 100);
+
+        // ── Fullscreen Controls ──
+        function setupFS(btnId, targetId, onEnter) {
+            const btn = document.getElementById(btnId);
+            const target = document.getElementById(targetId);
+            
+            btn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    target.requestFullscreen().catch(err => {
+                        console.error(`Error: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+            
+            if (onEnter) {
+                document.addEventListener('fullscreenchange', () => {
+                    if (document.fullscreenElement === target) {
+                        setTimeout(onEnter, 100);
+                    }
+                });
+            }
+        }
+
+        setupFS('btn-fs-main', 'map', () => map.invalidateSize());
+        setupFS('btn-fs-hist', 'hist-map-viewport', () => {
+            // Re-center historical map in fullscreen
+            const vWidth = viewport.clientWidth;
+            histX = (vWidth - 800 * histScale) / 2;
+            updateHistTransform();
+        });
+    </script>
+</body>
+
+</html>

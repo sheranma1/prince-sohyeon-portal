@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>朝廷爭議 V3 - 牌卡版</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #b8860b;
+            --ink-black: #1a1a1a;
+            --paper-white: #fcfaf2;
+            --royal-red: #c0392b;
+            --royal-gold: #f1c40f;
+            --minister-gray: #34495e;
+            --angry-red: #e74c3c;
+            --blue-army: #2980b9;
+            --trad-bg: #2c5aa0;
+            --reform-bg: #a82a2a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--paper-white);
+            background-image:
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 4px),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 4px);
+            color: var(--ink-black);
+            font-family: 'Noto Serif TC', serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* 牌卡系統 */
+        .card-display-area { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 500; }
+
+        .card {
+            position: fixed;
+            width: 280px;
+            height: 380px;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 3px solid var(--royal-gold);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            font-weight: 700;
+            pointer-events: auto;
+            cursor: pointer;
+            opacity: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0) rotateY(-90deg);
+        }
+
+        .card.trad-card {
+            border-left: 8px solid var(--blue-army);
+            background: linear-gradient(135deg, rgba(45, 90, 160, 0.3), rgba(20, 40, 80, 0.3)), linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+        }
+
+        .card.reform-card {
+            border-left: 8px solid var(--royal-red);
+            background: linear-gradient(135deg, rgba(160, 40, 40, 0.3), rgba(80, 20, 20, 0.3)), linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+        }
+
+        .card.fly-in {
+            animation: card-fly-in 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .card.stay {
+            animation: none;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1) rotateY(0deg);
+        }
+
+        .card-header {
+            border-bottom: 2px solid var(--royal-gold);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card-player {
+            font-size: 1.3rem;
+            color: var(--royal-gold);
+            letter-spacing: 4px;
+            font-weight: 900;
+        }
+
+        .card-power {
+            font-size: 1.6rem;
+            font-weight: 900;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .card-power.positive { color: #2ecc71; }
+        .card-power.negative { color: #e74c3c; }
+
+        .card-title {
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+            text-align: center;
+            line-height: 1.6;
+            font-weight: 900;
+        }
+
+        .card-content {
+            flex: 1;
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #ddd;
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        @keyframes card-fly-in {
+            0% {
+                opacity: 0;
+                left: var(--card-start-x);
+                top: var(--card-start-y);
+                transform: translate(0, 0) scale(0.3) rotateY(-90deg) rotateZ(-20deg);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.15) rotateY(15deg) rotateZ(8deg);
+            }
+            100% {
+                opacity: 1;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%) scale(1) rotateY(0deg) rotateZ(0deg);
+            }
+        }
+
+        @keyframes card-fade-out {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5) translateY(100px); }
+        }
+
+        .card.fade-out { animation: card-fade-out 0.5s ease-out forwards; }
+
+        /* 其餘保持v2原樣 */
+        .audio-controls { position: fixed; top: 15px; right: 20px; z-index: 100001; background: rgba(0,0,0,0.8); border: 2px solid var(--royal-gold); padding: 10px 20px; border-radius: 30px; display: none; align-items: center; gap: 15px; }
+        #volume-slider { width: 80px; accent-color: var(--royal-gold); cursor: pointer; }
+
+        #intro-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100000; overflow: hidden; display: flex; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.8s ease-out; background: #000; }
+        .door { position: absolute; top: 0; width: 50.5vw; height: 100vh; background: #000; transition: transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 1; }
+        .door-left { left: 0; border-right: 3px solid var(--royal-gold); }
+        .door-right { right: 0; border-left: 3px solid var(--royal-gold); }
+        #intro-overlay.open .door-left { transform: translateX(-100%); }
+        #intro-overlay.open .door-right { transform: translateX(100%); }
+        #intro-content { position: relative; z-index: 2; text-align: center; color: #fff; max-width: 900px; }
+        .intro-text { font-size: 2.1rem; font-weight: 700; line-height: 2.3; margin-bottom: 25px; opacity: 0; transform: translateY(20px); transition: 1s ease-out; }
+        .intro-text.visible { opacity: 1; transform: translateY(0); }
+        #start-btn { margin-top: 50px; padding: 20px 80px; font-size: 1.6rem; color: var(--royal-gold); border: 2px solid var(--royal-gold); background: transparent; cursor: pointer; opacity: 0; transition: 0.6s ease-out; letter-spacing: 10px; }
+        #start-btn.visible { opacity: 1; }
+
+        #app { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: relative; transform: scale(1.05); opacity: 0; transition: opacity 0.9s ease-out, transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        #app.visible { transform: scale(1); opacity: 1; }
+
+        .page-title { text-align: center; font-size: 1.8rem; font-weight: 900; color: var(--royal-gold); letter-spacing: 8px; padding: 15px 0 5px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .page-footer { text-align: center; font-size: 0.75rem; color: #999; letter-spacing: 4px; padding: 10px 0; border-top: 1px solid #ddd; margin-top: auto; }
+
+        .status-bar { height: 75px; background: rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; border-bottom: 2px solid #ddd; z-index: 1000; gap: 8px; }
+        .bar-labels { display: flex; justify-content: space-between; width: 60%; font-weight: 900; font-size: 1rem; color: #444; letter-spacing: 2px; }
+        .stance-container {
+            width: 60%; height: 18px; background: #333; border-radius: 9px; overflow: hidden; display: flex;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5), 0 0 15px rgba(0,0,0,0.1); border: 2px solid #444;
+            position: relative;
+        }
+        .stance { transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); position: relative; }
+        .traditionalists { background: linear-gradient(90deg, #1a5276, var(--blue-army)); box-shadow: 0 0 20px rgba(41,128,185,0.4); }
+        .reformists { background: linear-gradient(90deg, var(--royal-red), #e74c3c); box-shadow: 0 0 20px rgba(192,57,43,0.4); }
+        .bar-center-line { display: none; }
+
+        .stance-label { position: relative; cursor: help; }
+        .stance-label::after {
+            content: "守經派主張遵循傳統嫡長制｜立長派主張根據實際情況立長君";
+            position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%);
+            width: 300px; background: rgba(0,0,0,0.9); color: #fff; padding: 8px 12px;
+            border-radius: 5px; font-size: 0.7rem; white-space: normal;
+            z-index: 1000; display: none; pointer-events: none;
+            border: 1px solid var(--royal-gold);
+        }
+        .stance-label:hover::after { display: block; }
+
+        .court-layout { flex: 1; display: flex; flex-direction: column; padding: 10px 40px; gap: 15px; justify-content: space-between; }
+
+        .badge-circle {
+            width: 80px; height: 80px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            background: var(--minister-gray); color: #fff; font-size: 1.5rem; font-weight: 900;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.4s; border: 3px solid #fff; cursor: help;
+        }
+        .royal .badge-circle { width: 105px; height: 105px; background: var(--royal-red); border-color: var(--royal-gold); font-size: 1.9rem; }
+
+        .character.active .badge-circle { transform: scale(1.4); box-shadow: 0 0 40px var(--royal-gold); border-color: var(--royal-gold); z-index: 100; animation: speaker-bounce 1.6s infinite ease-in-out; }
+        #char-仁祖.active .badge-circle { transform: scale(1.5); box-shadow: 0 0 60px var(--royal-red); animation: royal-bounce 1.6s infinite ease-in-out; }
+        @keyframes speaker-bounce { 0%, 100% { transform: scale(1.4) translateY(0); } 50% { transform: scale(1.42) translateY(-3px); } }
+        @keyframes royal-bounce { 0%, 100% { transform: scale(1.5) translateY(0); } 50% { transform: scale(1.52) translateY(-4px); } }
+
+        .royal-row { display: flex; justify-content: center; align-items: center; gap: 50px; height: 150px; }
+        .ministers-floor { display: flex; justify-content: space-between; flex: 1; align-items: flex-start; padding: 0 20px; }
+        .minister-group { display: flex; flex-direction: column; align-items: center; gap: 12px; flex: 1; }
+        .avatars-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+        .group-label { font-weight: 900; color: #888; font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase; }
+
+        .dialogue-center { width: 100%; height: 380px; display: flex; flex-direction: column; align-items: center; padding: 0 20px 15px 20px; gap: 12px; margin-top: -40px; }
+        .progress-indicator { font-size: 0.9rem; color: #888; font-weight: 900; letter-spacing: 2px; }
+        .dialogue-box { width: 100%; max-width: 850px; background: #fff; border-radius: 15px; padding: 25px 40px 30px 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); border: 5px solid #333; cursor: pointer; text-align: left; position: relative; min-height: 200px; }
+        .speaker-box { position: absolute; top: -25px; left: 40px; background: #333; color: #fff; padding: 8px 30px; border-radius: 5px; font-weight: 900; font-size: 1.1rem; box-shadow: 6px 6px 0px var(--gold); }
+        .speech-text { font-size: 1.7rem; line-height: 1.7; color: #000; font-weight: 700; min-height: 2.2em; max-height: 280px; overflow-y: auto; }
+        .controls { display: flex; gap: 20px; width: 100%; max-width: 850px; justify-content: space-between; align-items: center; }
+        .btn-control { background: linear-gradient(135deg, #444, #222); color: var(--royal-gold); border: 2px solid var(--royal-gold); padding: 12px 35px; border-radius: 6px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: all 0.3s; letter-spacing: 2px; }
+        .btn-control:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(184,134,11,0.4); background: linear-gradient(135deg, #555, #333); }
+        .restart-btn { background: linear-gradient(135deg, var(--royal-red), #a0291f); border-color: var(--royal-gold); }
+
+        #objection-bubble {
+            position: fixed; top: 45%; left: 50%; width: auto; height: auto; transform: translate(-50%, -50%) scale(0);
+            background: transparent; color: #e74c3c; display: flex; justify-content: center; align-items: center;
+            font-size: 12rem; font-weight: 900; z-index: 200000; pointer-events: none; writing-mode: horizontal-tb;
+            text-shadow: -6px -6px 0px rgba(0,0,0,0.4), 6px 6px 0px rgba(0,0,0,0.4), -6px 6px 0px rgba(0,0,0,0.4), 6px -6px 0px rgba(0,0,0,0.4);
+            letter-spacing: 15px;
+        }
+        #objection-bubble.show { animation: objection-impact 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes objection-impact { 0% { transform: translate(-50%, -50%) scale(0) skewX(-10deg); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.3) skewX(5deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) skewX(0deg); opacity: 1; } }
+
+        .action-lines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.15) 10px, rgba(0,0,0,0.15) 20px); z-index: 199999; opacity: 0; pointer-events: none; }
+        .action-lines.active { animation: action-flash 0.8s ease-out forwards; }
+        @keyframes action-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+        #flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 9999; opacity: 0; pointer-events: none; }
+        .flash-active { animation: flash-anim 0.3s forwards; }
+        .shake-screen { animation: screen-shake 0.4s ease-in-out; }
+        @keyframes screen-shake { 0%, 100% { transform: translate(0,0); } 10%, 50%, 90% { transform: translate(-10px,-10px); } 30%, 70% { transform: translate(10px,10px); } }
+        .speed-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0; pointer-events: none; }
+        .speed-lines.active { opacity: 1; background: repeating-conic-gradient(from 0deg, transparent 0deg 1deg, rgba(0,0,0,0.08) 1deg 2deg); }
+
+        .term { color: var(--gold); border-bottom: 2px solid var(--gold); cursor: help; font-weight: 900; }
+        #wiki-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 480px; background: #fff; border-radius: 20px; padding: 40px; border: 5px solid var(--gold); z-index: 200001; display: none; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200000; display: none; }
+    </style>
+</head>
+<body>
+    <audio id="bgm" loop><source src="https://archive.org/download/lp_folk-and-classical-music-of-korea_various/Folk%20and%20Classical%20Music%20of%20Korea%20-%2001%20-%20Shin%20Tan%20Ga.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-slam"><source src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==" type="audio/wav"></audio>
+    <audio id="sfx-sting"><source src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==" type="audio/wav"></audio>
+    <audio id="sfx-objection"><source src="https://www.myinstants.com/media/sounds/objection.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-type" loop><source src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==" type="audio/wav"></audio>
+    <audio id="sfx-door"><source src="https://assets.mixkit.co/active_storage/sfx/2810/2810-preview.mp3" type="audio/mpeg"></audio>
+
+    <div class="action-lines" id="action-lines"></div>
+    <div id="objection-bubble">不可！</div>
+
+    <!-- 牌卡顯示區域 -->
+    <div class="card-display-area" id="card-display-area"></div>
+
+    <div class="audio-controls" id="audio-ui">
+        <button id="audio-toggle" onclick="toggleAudio()">🔈 音效 ON</button>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" oninput="adjustVolume(this.value)">
+    </div>
+
+    <div id="intro-overlay">
+        <div class="door door-left"></div><div class="door door-right"></div>
+        <div id="intro-content">
+            <p class="intro-text" id="t1">朝鮮仁祖二十三年（1645年）</p>
+            <p class="intro-text" id="t2">歸國不久的昭顯世子暴斃宮中</p>
+            <p class="intro-text" id="t3">宗法與權力的齒輪開始瘋狂轉向</p>
+            <p class="intro-text" id="t4">仁祖晚年體衰，欲立長君以穩宗統</p>
+            <p class="intro-text" id="t5">但此舉挑戰千年嫡長制傳統</p>
+            <p class="intro-text" id="t6">守經派與立長派的激烈交鋒即將上演</p>
+            <p class="intro-text" id="t7" style="color:var(--royal-gold)">歷史的轉折，全在於此。</p>
+            <button id="start-btn" onclick="openPalaceGates()">推門旁聽辯論</button>
+        </div>
+    </div>
+
+    <div id="flash"></div>
+    <div id="app">
+        <div class="speed-lines" id="speed-lines"></div>
+
+        <div class="page-title">朝廷爭議 1645 - 牌卡版</div>
+        <header class="status-bar">
+            <div class="bar-labels">
+                <span>守經派 (Traditionalist)</span>
+                <span>立長派 (Pro-reform)</span>
+            </div>
+            <div class="stance-container">
+                <div class="bar-center-line"></div>
+                <div class="stance traditionalists" id="bar-traditional" style="width: 50%;"></div>
+                <div class="stance reformists" id="bar-reform" style="width: 50%;"></div>
+            </div>
+        </header>
+
+        <main class="court-layout" id="main-stage">
+            <div class="royal-row">
+                <div class="character royal" id="char-仁祖" onclick="showWiki('仁祖')"><div class="badge-circle">仁祖</div></div>
+                <div class="character royal" id="char-鳳林" onclick="showWiki('鳳林')"><div class="badge-circle">鳳林</div></div>
+                <div class="character royal" id="char-麟坪" onclick="showWiki('麟坪')"><div class="badge-circle">麟坪</div></div>
+                <div class="character royal" id="char-世孫" onclick="showWiki('世孫')"><div class="badge-circle">世孫</div></div>
+            </div>
+
+            <div class="ministers-floor">
+                <div class="minister-group"><div class="group-label">守經派</div><div class="avatars-grid" id="min-b"></div></div>
+                <div class="minister-group"><div class="group-label">中立/權臣</div><div class="avatars-grid" id="min-a"></div></div>
+                <div class="minister-group"><div class="group-label">群臣</div><div class="avatars-grid" id="min-c"></div></div>
+            </div>
+
+            <div class="dialogue-center">
+                <div class="progress-indicator"><span id="progress-text">0/71</span></div>
+                <section class="dialogue-box" id="dialogue-box">
+                    <div class="speaker-box" id="speaker">宮廷史官</div>
+                    <div class="speech-text" id="speech">...</div>
+                </section>
+                <div class="controls">
+                    <button class="btn-control restart-btn" onclick="restartDebate()">↻ 重新開始</button>
+                    <div style="display: flex; gap: 20px;">
+                        <button class="btn-control" id="btn-prev" disabled>◀ Back</button>
+                        <button class="btn-control" id="btn-next">Next ▶</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="page-footer">朝鮮仁祖時代 | 宗統之爭 | 1645年廷議 | 牌卡版</footer>
+    </div>
+
+    <div class="modal-overlay" id="wiki-overlay" onclick="closeWiki()"></div>
+    <div id="wiki-modal"><h2 id="wiki-title"></h2><p id="wiki-content"></p><button class="btn-control" style="width:100%; margin-top:20px;" onclick="closeWiki()">返回</button></div>
+
+    <script>
+        // 牌卡數據 - 最終驗證（對話陣列索引，從379行開始計數）
+        const cardData = {
+            0: { name: "疾病危局", purpose: "身體衰弱危及社稷，幼孫難當大任", power: 8, faction: "reform" },
+            2: { name: "宗社危機", purpose: "國家艱難之際需要成熟領導力量", power: 8, faction: "reform" },
+            4: { name: "常經不易", purpose: "嫡長制乃不變之常，輕易行權必致混亂", power: -10, faction: "trad" },
+            6: { name: "拆除危機", purpose: "君主春秋正盛，幼孫已有成長基礎", power: -6, faction: "trad" },
+            8: { name: "人心成本", purpose: "改立會動搖人心，造成內外波蕩", power: -12, faction: "trad" },
+            9: { name: "歷史先例", purpose: "世祖傳睿宗的先例證明權變可行", power: 10, faction: "reform" },
+            10: { name: "威壓首相", purpose: "國家大事全在首相決斷", power: 10, faction: "reform" },
+            11: { name: "甩鍋牌", purpose: "首相不敢獨斷，要求集體議決", power: -5, faction: "trad" },
+            12: { name: "先例佐證", purpose: "太宗時廢立先例百官一致同意", power: 8, faction: "reform" },
+            16: { name: "權變之道", purpose: "權宜之舉乃應時制宜之智慧", power: 12, faction: "reform" },
+            18: { name: "道德逼供", purpose: "世祖亂局需用長君才能穩定國家", power: 10, faction: "reform" },
+            30: { name: "警告威脅", purpose: "古代統治制度一變就會帶來災患", power: -8, faction: "trad" },
+            31: { name: "堅定守經", purpose: "宗社大計需與大臣定議，守經無他", power: -10, faction: "trad" },
+            32: { name: "怒壓全場", purpose: "必須與大臣決策，不許再逃避責任", power: 12, faction: "reform" },
+            33: { name: "道德轉換", purpose: "聖上深思熟慮過，應速定不應拖延", power: 10, faction: "reform" },
+            35: { name: "權變正當", purpose: "若能安定國家，權變之法何嘗不可", power: 5, faction: "reform" },
+            39: { name: "國本不動", purpose: "元孫名位已立，位號早已確定", power: -12, faction: "trad" },
+            37: { name: "和稀泥牌", purpose: "聖意既定就該服從，何必爭議", power: 10, faction: "reform" },
+            44: { name: "廢立核心", purpose: "元孫資質無法負擔國家重任", power: 12, faction: "reform" },
+            46: { name: "預判反駁", purpose: "幼年時期無法預測成長後的才能", power: -8, faction: "trad" },
+            50: { name: "首相背書", purpose: "首相認可此舉乃出於公心而非私心", power: 10, faction: "reform" },
+            51: { name: "權變定局", purpose: "守經是正道，但權變之決在聖上", power: 5, faction: "trad" },
+            52: { name: "終極怒火", purpose: "大臣躲躲藏藏含糊其辭，應該直言負責", power: 15, faction: "reform" },
+            64: { name: "外交壓力", purpose: "清朝使節必問國本，不得不急速議定", power: 10, faction: "reform" },
+            66: { name: "定局牌", purpose: "決議終定，立鳳林大君為世子", power: 20, faction: "reform" },
+        };
+
+        const wikiData = {
+            "仁祖": "朝鮮第16代君主（1595-1649），初封綾陽君。宣祖第五子定遠君與連珠郡夫人具氏之子，生於壬辰倭亂逃難時期。因光海君殺害親兄弟臨海君與永昌大君，又廢仁穆大妃，引發朝野不滿，西人黨發動政變推翻光海君，立仁祖為王，史稱「仁祖反正」（1623年）。登位後朝鮮政權落入西人黨手中。在位期間經歷丁卯胡亂（1627年）與丙子胡亂（1636年），丙子山城戰後被迫簽署苛刻和約，成為清朝藩屬國。晚年身體衰弱，世子與次子被送往清朝為人質。為保護王統，力主立長君而非幼孫，於1645年廷議中決定改立次子鳳林為世子。性格剛強但難聽直言，常以雷厲手段對付反對派。",
+            "元孫": "昭顯世子之子，仁祖長孫。年僅十歲，體弱多病。因父親世子突然薨去，宗統面臨危機。仁祖以其幼弱為由，欲改立叔父鳳林為世子，引發廷議大波瀾。最終未被立為世子。",
+            "鳳林": "仁祖次子，後來的孝宗。1619年生，1626年封為鳳林大君。丙子胡亂後曾與兄昭顯世子一同在盛京為人質。兄長回國後驟然薨去，遂成為世子。在盛京為人質期間對清朝產生深刻蔑視，堅信「胡人無百年之運」，依然向明朝尊崇。為籌備北伐清朝，起用西人黨宋時烈。除公家文書外棄用清年號，改用崇禎年號。北伐計畫遭清朝調查警告（「六使詰責」），抱憾而終。1659年薨於昌德宮，享年四十一。在廷議中保持沉默，讓仁祖親自決斷。",
+            "麟坪": "仁祖第三子，名李㴭，字用涵，號松溪。朝鮮最後一位生前受封的大君。丙子胡亂後，兄長昭顯世子與鳳林大君李淏被扣留在瀋陽，麟坪雖留在朝鮮，也曾多次出使清廷，或與兄長們輪流為質。在廷議中立場不明，未在對話中發言。孝宗九年（1659年）五月十三日薨逝，謚號忠敬，高宗二年（1865年）配享孝宗廟庭。作為第三順位繼承人而存在。",
+            "世孫": "元孫的別稱。即昭顯世子之子。代表嫡長制傳統的守護者，但因年幼體弱而成為改革派的攻擊對象。",
+            "金瑬": "領議政（首相），西人派領袖。宣祖朝科舉入仕，因反對光海君而被罷免，後密謀「仁祖反正」(1623年)政變，扶植李倧(仁祖)成功執政，為策靖社勳第一。經歷丙子胡亂戰敗，長子被賜死。初期傾向保守，主張守經。但在仁祖威壓下逐漸軟化，最終同意改立鳳林為世子。智謀深遠，為廷議中的關鍵人物。",
+            "金自點": "權臣，1623年因參與仁祖反正而入仕，封洛興君。丙子胡亂時任都元帥，因貽誤軍機而戰敗於兔山，戰後遭仁祖流放珍島。1640年復歸政界，三次出使清朝，晉爵洛興府院君。歷任右議政、左議政，1646年拜領議政。掌權時對內勾結仁祖寵姬趙氏，對外親清，引發朝野不滿。在廷議中支持仁祖改立決定，主張權變之道。1649年孝宗繼位後被罷相，後因圖謀推戴趙貴人之子崇善君的逆謀敗露，1651年被孝宗下旨凌遲處死。",
+            "洪瑞鳳": "左議政，守經派領袖。堅持嫡長制傳統，反對廢立世孫。認為常經不可輕廢，輕易行權會造成人心混亂。多次提出異議，是傳統派的主要發聲者。",
+            "德泂": "守經派代表。堅守傳統宗統理論，認為既已立元孫為世子，則不可輕易改立。對仁祖的決定深感憂慮，擔心朝代動盪。",
+            "景奭": "官僚派代表，守經派立場。認為輕易行權會引發四方疑惑，危害國家。強調經常之道乃先王之典，不可膠守但也不可輕率變通。",
+            "李敬輿": "言官代表，守經派重要聲音。以修辭高妙著稱。強調應論賢否而非論長幼，反問幼年嗣位何嘗無成德保邦者。後期亦認可權變可行，但需謹慎。",
+            "金堉": "官員，守經派。主張世祖朝國家寧謐才能行反常之舉，今日形勢異於當時，恐不可輕易行之。代表環境論的聲音。",
+            "李悦": "權臣派代表，立場靈活。初期傾向守經，但中期開始認可權變。主張國本之樹不可立決於一言，需更多討論。最終倒向改立派。",
+            "壽賢": "官員，權臣派傾向。主張重大決策不可一二人之見決之，須與大臣熟講。代表集體決策論。",
+            "太和": "官員，守經派。同情堉的觀點，認為現況不同於往昔，改立風險大。",
+            "楘": "官員，激進守經派。甚至提出「三代以後承統有序」的古訓，警告輕易行權必有大患。代表最保守的聲音。",
+            "爾徵": "官員，堅定守經派。在廷議最後關頭仍表示「但有守經而已」，拒絕妥協。代表原則立場。",
+            "植": "官員，權變派代表。嘲笑書生之見，主張「守經而宗社必危，行權而國家可安，則此舉未為不可」。代表務實政治家的聲音。",
+            "昭顯世子": "仁祖長子，已薨。其死亡是整個廷議的觸發點。年輕時頗有才名，但因政治糾紛而驟然去世。留下幼弱的兒子元孫。"
+        };
+
+        const dialogue = [
+            { speaker: "上", text: "予有宿疾，往往而劇，元孫如彼其微弱. 予觀今日之形勢，不可以待小兒之成長. 未知卿等之意以爲何如？", special: "shake", stance: 5 },
+            { speaker: "金瑬", text: "朝野方頌岡陵之祝，而殿下遽出此言，臣等罔知所達。", stance: -2 },
+            { speaker: "上", text: "非徒疾病如此，國事日阽於艱危，脱有不諱，幼沖之主恐不能擔當大器. 予欲於大君中擇立爾。", special: "speed", stance: 8 },
+            { speaker: "金瑬", text: "今此下教，雖出於爲宗社之大計，而臣等惶惑不知所言，宜博詢諸臣。", stance: -2 },
+            { speaker: "洪瑞鳳", text: "考諸往牒，太子不在，繼以太孫，此乃不易之常經. 反常行權，恐非國家之福。", special: "objection", stance: -10 },
+            { speaker: "上", text: "雖在治平之世，必以國有長君爲福，況今日乎？", stance: 5 },
+            { speaker: "李悦", text: "瑞鳳之言，正合臣意. 殿下雖有微恙，春秋鼎盛，元孫雖曰微弱，已至十歲. 自古幼主之繼緒者何限？宗統甚重，恐不可輕議也。", stance: -6 },
+            { speaker: "金自點", text: "殿下以疾病之未平、時事之艱虞，爲宗社、生民之大計，而發此言，宜更詢于諸臣而決之。", stance: 3 },
+            { speaker: "李敬輿", text: "臣之愚見，與瑞鳳無異. 世嫡承統，今古之常經，常經之外更無所陳. 大抵能守常經，則雖屬艱虞，而猶可以保國. 若邊用權道，則群情不服而多致患難. 今者擧國之係望於元孫已久，若聞此言，則中外人心，必皆波蕩，甚可懼也。", special: "objection", stance: -12 },
+            { speaker: "上", text: "我世祖不傳於元孫，傳於睿宗，當時朝臣無異議，果皆不忠者耶？大臣當國家之大事，宜任其責，而徒以循常之談，為塞責之地，此豈大臣之道耶？", special: "shake", stance: 10 },
+            { speaker: "上", text: "（謂瑬曰）此事專在於領相，卿其決之。", special: "flash", stance: 10 },
+            { speaker: "金瑬", text: "臣雖忝首相，顧安敢獨斷乎？若明知宗社存亡決於此舉，則群臣固無敢異議者，而今日之舉，未見其必係於存亡，而欲行非常之道，此臣等之所以不敢輕議也。", stance: -5 },
+            { speaker: "上", text: "古之大臣擔當國事，不知有其身. 我太宗朝讓寧大君之在東宮也，百官請廢之，至於庭請，是皆以國為重，而不顧後患者也. 若使太宗不許，則後日之禍有不可測，而猶且為之. 今卿等知其可，而不肯言，何也？", special: "speed", stance: 8 },
+            { speaker: "金瑬", text: "德宗在東宮，昇遐於天順丁丑，而睿宗繼統於戊子，則當時成宗年十二歲矣，月山大君又加長矣，而光廟之建儲如此，未知何故也。", stance: -5 },
+            { speaker: "上", text: "月山大君則性質不慧云，而當時成宗之年，亦已過十歲耶？", stance: 3 },
+            { speaker: "金瑬", text: "成宗生於丁丑德宗升遐之歲，故逮戊子世祖升遐之日，年十二矣。", stance: -2 },
+            { speaker: "上", text: "以序言之，則當立者月山，而事有隨時變通者，故不得不如此爾. 若以為常經不可不守，則世祖何以不傳於月山，而傳於睿宗，若以長幼言之，則睿宗何以舍月山，而立成廟耶？", special: "shake", stance: 12 },
+            { speaker: "金瑬", text: "當世祖之世，國家無事，而有此反常之擧，大聖人處事，誠未可量，此蓋出於擇賢耶？", stance: -3 },
+            { speaker: "上", text: "世祖朝事，多危疑，故必欲立長君. 若出於擇賢，則成廟之聖，豈必不及於睿宗耶？予亦豈不知循序，而傳之之為至順也？第惟今日之勢，必須國有長君，然後可以保宗社之重也.", special: "speed", stance: 10 },
+            { speaker: "德泂", text: "臣之意，亦以瑞鳳之言為然也。", stance: -5 },
+            { speaker: "仁垕", text: "殿下之意，為宗社之大計，惟在聖斷耳。", stance: 5 },
+            { speaker: "時白", text: "洪、李二大臣之言，俱是經常之道，臣則以兩臣之意為然也。", stance: -5 },
+            { speaker: "景奭", text: "國有長君，雖曰社稷之福，無易樹之，乃是先王之典. 且國家安危之機，若能如燭照龜卜，則聖慮所在，不為無見，而若一行處變之舉，而反致四方之疑惑，則雖以利害言之，亦不知其可也。", special: "objection", stance: -10 },
+            { speaker: "植", text: "書生之見，只守常道，寧知權變？", stance: -5 },
+            { speaker: "上", text: "所謂書生，平日讀書，而不知用權之道，則雖腹有詩書，亦安用哉？且今日定策，豈如權謀術數之難知者耶？", special: "shake", stance: 8 },
+            { speaker: "植", text: "守經而宗社必危，行權而國家可安，則此舉未為不可，而臣恐不守經，則反不得安也。", stance: -5 },
+            { speaker: "壽賢", text: "國家重事，不可以一二人之見決之，須熟講於大臣而為之。", stance: -3 },
+            { speaker: "金堉", text: "世祖朝國家寧謐，故能行反常之舉，今日形勢異於當時，恐不可輕易行之也。", stance: -6 },
+            { speaker: "太和", text: "臣之意與堉同矣。", stance: -4 },
+            { speaker: "上", text: "兩司長官亦各言其意。", stance: 0 },
+            { speaker: "楘", text: "三代以後，承統有序，若邊行權道，則必有大患矣。", special: "objection", stance: -8 },
+            { speaker: "爾徵", text: "宗社之計，須與大臣議定，必欲問臣，但有守經而已。", stance: -10 },
+            { speaker: "上", text: "（厲聲曰）此事必須與大臣決之. 卿等但為此常談，一朝若不諱，卿等何以為計耶？", special: "shake", stance: 15 },
+            { speaker: "金自點", text: "此舉出於聖上之深思慮，宜速斷定，何必持難耶？", stance: 10 },
+            { speaker: "上", text: "此言是也。", stance: 5 },
+            { speaker: "金瑬", text: "群臣之言，似與臣意相反矣。", stance: -2 },
+            { speaker: "上", text: "然則卿之見，果以為何如耶？", stance: 3 },
+            { speaker: "金瑬", text: "癸亥反正之舉、南漢出城之事，豈非非常舉措，而無非為宗社大計，故臣奉聖上，行之不疑。今也臣民之望，非不已屬於元孫，而殿下之教如此，此必宮中之事，有外人所未及知之者。若上意已定，則臣何敢可否於其間哉？", stance: 5 },
+            { speaker: "上", text: "卿之意，與予合矣。大君雖有二人，皆無可取，而成長之人，異於幼沖，故有此計也。", stance: 8 },
+            { speaker: "金瑬", text: "讓寧大君多失德、敗度之事，故朝臣有廢立之請。今則元孫幼沖，失德未彰，而猝有今日之教，所以人心之驚惑，而群議之不一也。", stance: -3 },
+            { speaker: "上", text: "元孫之師傅，皆在坐中，豈不明知其賢不肖耶？", stance: 5 },
+            { speaker: "金堉", text: "元孫幼沖，別無失德矣。", stance: -2 },
+            { speaker: "上", text: "元孫雖在沖年，若觀其氣質，則豈不知將來之所成就耶？", stance: 5 },
+            { speaker: "金瑬", text: "自上若下明教，則可以立決。", stance: 3 },
+            { speaker: "上", text: "元孫性質不明，決非負荷之才也。", special: "flash", stance: 10 },
+            { speaker: "植", text: "進講之時，可見其英發矣。", stance: 3 },
+            { speaker: "景奭", text: "臣亦進參講書之列，而幼少之年，豈可預卜將來之成就耶？", stance: -5 },
+            { speaker: "景奭", text: "洛興未畢前說，盍終言之？", stance: 0 },
+            { speaker: "金自點", text: "聖上之為宗社深謀遠計，豈無所見哉？", stance: 5 },
+            { speaker: "上", text: "然則卿之意，不以為不可也。", stance: 3 },
+            { speaker: "金瑬", text: "聖上之為此舉者，公天下之心也。寧有私意於其間哉？", stance: 8 },
+            { speaker: "洪瑞鳳", text: "臣之所達，經常之道也。若夫處權，在聖上。", stance: -5 },
+            { speaker: "上", text: "大臣之議，每以經常二字為執言之地，含糊傳會. 棄職而去宜矣！士君子行己處心，豈可如是黠鼠耶？", special: "shake", stance: 12 },
+            { speaker: "李悦", text: "以經常言之，則臣民之屬望，自有所載. 不意今日有此非常之舉，故臣等之言如是矣. 若以為宗社臣民，必如是而可安，則亦豈無行權之道乎？", stance: -5 },
+            { speaker: "李敬輿", text: "上意雖以元孫之幼沖，思得長君，而非常之舉，豈敢易議？且論其長幼，不若論其賢否. 今也聖教，不及於元孫之賢否，而只以長幼為言. 自古幼年嗣位，成德保邦者，亦非一二，豈可以年之幼沖，而輕易廢立耶？", stance: -10 },
+            { speaker: "李敬輿", text: "元孫之在膝下已久，其賢不肖，想已洞燭，而外庭之臣無由得知. 今日臣民，皆已屬望於元孫，知有世嫡之當承而已. 若反常行權，而宗社永賴，則其在古昔，亦有此事，帝王經常之典，臣亦知其不可膠守矣。", special: "objection", stance: -8 },
+            { speaker: "李悦", text: "今日諸臣之所以持難不決者，非過也. 世子既沒，則當繼者元孫也. 國本之易樹，豈可立決於一言乎？", stance: -6 },
+            { speaker: "德泂", text: "既正元孫之名，又立輔養之官，則位號之定久矣. 經常不易之典，可考信於往牒也. 人臣之道，猝當反常之舉，當以守經爭之乎，抑將以處權順之乎？今日聖教，雖以宗社之計為言，而猝然一朝，欲易已正之名號，群臣若靡然從之，則將焉用彼臣為哉？", special: "objection", stance: -12 },
+            { speaker: "上", text: "（默然良久曰）大臣之意，則皆歸於一耶？", special: "flash", stance: 5 },
+            { speaker: "金瑬", text: "似無異議也。", stance: 10 },
+            { speaker: "上", text: "不幸諸子皆沒，只有二人，大臣擇賢而定之. 此非嫡長之比，唯當擇其賢耳。", stance: 8 },
+            { speaker: "洪瑞鳳", text: "大君與朝臣，無相接之事，何能知其優劣乎？古人云：『知子莫如父. 』此在睿斷而已。", stance: 5 },
+            { speaker: "上", text: "二人皆劣，無所取舍. 予欲立長，未知何如？", stance: 12 },
+            { speaker: "金瑬", text: "立嫡以長，順也。", stance: 10 },
+            { speaker: "上", text: "然. 清使將來，必問國本，故不得不急急議定耳.", special: "speed", stance: 10 },
+            { speaker: "金瑬", text: "此外更無可議，須明白下教，使群臣明知之。", stance: 5 },
+            { speaker: "上", text: "以鳳林大君為世子。", special: "flash", stance: 20 },
+            { speaker: "金自點", text: "當捧承傳乎？", stance: 5 },
+            { speaker: "史官", text: "（左右竊笑）上曰：『無庸為也。』瑬請令禮曹奉行，上曰：『徐為之未晚也。』", stance: 0 },
+            { speaker: "歷史評述", text: "【廷議終結】仁祖終於下定決心。鳳林大君被正式立為世子。守經派的反對未能阻止權變之舉的實現。", stance: 0 },
+            { speaker: "歷史評述", text: "【歷史影響】鳳林後繼位為孝宗。此次廷議的勝負，深刻影響了朝鮮的王統繼承和政治權力的分布。", stance: 0 },
+        ];
+
+        const ministersData = { "金瑬": "a", "金自點": "a", "洪瑞鳳": "b", "李敬輿": "b", "景奭": "b", "金堉": "b", "李悦": "c", "壽賢": "c", "太和": "c", "楘": "c", "爾徵": "c", "德泂": "c", "仁垕": "c", "時白": "c", "植": "c" };
+
+        function openPalaceGates() {
+            document.getElementById('intro-overlay').classList.add('open');
+            document.getElementById('bgm').play();
+            document.getElementById('audio-ui').style.display = 'flex';
+            setTimeout(() => document.getElementById('app').classList.add('visible'), 1200);
+            setTimeout(() => {
+                const overlay = document.getElementById('intro-overlay');
+                overlay.style.pointerEvents = 'none';
+                overlay.style.visibility = 'hidden';
+                overlay.style.opacity = '0';
+            }, 1300);
+            setTimeout(() => document.getElementById('intro-overlay').style.display = 'none', 1500);
+        }
+
+        function adjustVolume(v) { document.getElementById('bgm').volume = v; document.getElementById('sfx-slam').volume = v; document.getElementById('sfx-sting').volume = v; document.getElementById('sfx-objection').volume = v; document.getElementById('sfx-type').volume = v*0.2; }
+        function toggleAudio() { const b = document.getElementById('bgm'); if(b.paused){b.play(); document.getElementById('audio-toggle').innerText="🔈 音效 ON";}else{b.pause(); document.getElementById('audio-toggle').innerText="🔇 靜音";} }
+
+        let currentIndex = -1, isTyping = false, typingTimer = null, currentStanceBalance = 50;
+
+        function displayCard(index) {
+            if (!cardData[index]) return;
+
+            const card = cardData[index];
+            const speaker = dialogue[index].speaker;
+            const cardEl = document.createElement('div');
+            cardEl.className = `card ${card.faction === 'trad' ? 'trad-card' : 'reform-card'}`;
+
+            const powerClass = card.power > 0 ? 'positive' : 'negative';
+            const powerSign = card.power > 0 ? '+' : '';
+
+            cardEl.innerHTML = `
+                <div class="card-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="card-player">${speaker}</div>
+                        <div class="card-power ${powerClass}">${powerSign}${card.power}</div>
+                    </div>
+                </div>
+                <div class="card-title">${card.name}</div>
+                <div class="card-content">${card.purpose}</div>
+            `;
+
+            // 獲取發言者角色位置用於動畫起點
+            let startX = window.innerWidth / 2;
+            let startY = window.innerHeight / 2;
+
+            const speakerId = speaker === "上" ? 'char-仁祖' : `char-${speaker}`;
+            const speakerEl = document.getElementById(speakerId);
+            if (speakerEl) {
+                const rect = speakerEl.getBoundingClientRect();
+                startX = rect.left + rect.width / 2;
+                startY = rect.top + rect.height / 2;
+            }
+
+            // 設置CSS變量用於動畫起點（絕對座標）
+            cardEl.style.setProperty('--card-start-x', startX + 'px');
+            cardEl.style.setProperty('--card-start-y', startY + 'px');
+
+            const displayArea = document.getElementById('card-display-area');
+            // 移除舊卡片（如果有的話）
+            const oldCard = displayArea.querySelector('.card');
+            if (oldCard) displayArea.removeChild(oldCard);
+
+            displayArea.appendChild(cardEl);
+
+            // 觸發飛入動畫
+            requestAnimationFrame(() => {
+                cardEl.classList.add('fly-in');
+            });
+
+            // 動畫完成後停留（1秒動畫 + 1秒停留）
+            setTimeout(() => {
+                cardEl.classList.remove('fly-in');
+                cardEl.classList.add('stay');
+            }, 1000);
+
+            // 停留1秒後淡出（2秒後開始淡出）
+            setTimeout(() => {
+                cardEl.classList.add('fade-out');
+                setTimeout(() => { if (displayArea.contains(cardEl)) displayArea.removeChild(cardEl); }, 500);
+            }, 2000);
+        }
+
+        function updateUI() {
+            document.getElementById('progress-text').innerText = (currentIndex + 1) + '/' + dialogue.length;
+            const entry = dialogue[currentIndex];
+            document.getElementById('speaker').innerText = entry.speaker;
+            if (typingTimer) clearInterval(typingTimer);
+            isTyping = true; document.getElementById('sfx-type').play();
+            let i = 0; document.getElementById('speech').innerHTML = "";
+            typingTimer = setInterval(() => {
+                if (i < entry.text.length) { document.getElementById('speech').innerHTML += entry.text.charAt(i); i++; }
+                else { clearInterval(typingTimer); document.getElementById('sfx-type').pause(); document.getElementById('speech').innerHTML = formatText(document.getElementById('speech').innerHTML); isTyping = false; }
+            }, 20);
+
+            // 顯示牌卡
+            displayCard(currentIndex);
+
+            if (entry.special === "objection") {
+                document.getElementById('sfx-objection').play();
+                document.getElementById('action-lines').classList.add('active');
+                document.getElementById('objection-bubble').classList.add('show');
+                setTimeout(() => { document.getElementById('objection-bubble').classList.remove('show'); document.getElementById('action-lines').classList.remove('active'); }, 600);
+                triggerSpecial("shake"); triggerSpecial("flash");
+            }
+            if (entry.special === "shake" || entry.stance >= 12) { document.getElementById('sfx-slam').play(); triggerSpecial("shake"); }
+            if (entry.special === "flash" || entry.stance <= -10) { document.getElementById('sfx-sting').play(); triggerSpecial("flash"); }
+            if (entry.special === "speed") triggerSpecial("speed");
+
+            currentStanceBalance += (entry.stance || 0);
+            const bal = Math.max(10, Math.min(90, currentStanceBalance));
+            document.getElementById('bar-traditional').style.width = (100 - bal) + '%';
+            document.getElementById('bar-reform').style.width = bal + '%';
+
+            document.querySelectorAll('.character').forEach(c => c.classList.remove('active'));
+            let tid = (entry.speaker === "上") ? 'char-仁祖' : `char-${entry.speaker}`;
+            if (document.getElementById(tid)) document.getElementById(tid).classList.add('active');
+            document.getElementById('btn-prev').disabled = (currentIndex <= 0);
+        }
+
+        function triggerSpecial(type) {
+            const stage = document.getElementById('main-stage'), flash = document.getElementById('flash'), speed = document.getElementById('speed-lines');
+            if (type === "shake") { stage.classList.add('shake-screen'); setTimeout(() => stage.classList.remove('shake-screen'), 400); }
+            else if (type === "flash") { flash.classList.add('flash-active'); setTimeout(() => flash.classList.remove('flash-active'), 300); }
+            else if (type === "speed") { speed.classList.add('active'); setTimeout(() => speed.classList.remove('active'), 1200); }
+        }
+
+        function formatText(text) { let res = text; Object.keys(wikiData).forEach(k => { res = res.replace(new RegExp(k, 'g'), `<span class="term" onclick="event.stopPropagation(); showWiki('${k}')">${k}</span>`); }); return res; }
+        function showWiki(t) { document.getElementById('wiki-title').innerText = t; document.getElementById('wiki-content').innerText = wikiData[t] || "..."; document.getElementById('wiki-modal').style.display='block'; document.getElementById('wiki-overlay').style.display='block'; }
+        function closeWiki() { document.getElementById('wiki-modal').style.display='none'; document.getElementById('wiki-overlay').style.display='none'; }
+
+        function restartDebate() {
+            currentIndex = -1;
+            currentStanceBalance = 50;
+            document.getElementById('bar-traditional').style.width = '50%';
+            document.getElementById('bar-reform').style.width = '50%';
+            document.getElementById('speech').innerText = '點擊屏幕開始';
+            document.getElementById('progress-text').innerText = '0/' + dialogue.length;
+            document.getElementById('btn-prev').disabled = true;
+        }
+
+        function init() {
+            Object.keys(ministersData).forEach(n => {
+                const group = ministersData[n];
+                const d = document.createElement('div'); d.className = 'character minister'; d.id = `char-${n}`; d.onclick = () => showWiki(n);
+                d.innerHTML = `<div class="badge-circle">${n}</div>`;
+                document.getElementById('min-' + group).appendChild(d);
+            });
+            document.getElementById('dialogue-box').onclick = () => { if(isTyping){clearInterval(typingTimer); document.getElementById('sfx-type').pause(); document.getElementById('speech').innerHTML = formatText(dialogue[currentIndex].text); isTyping=false;} else if(currentIndex < dialogue.length-1){currentIndex++; updateUI();} };
+            document.getElementById('btn-next').onclick = document.getElementById('dialogue-box').onclick;
+            document.getElementById('btn-prev').onclick = (e) => { e.stopPropagation(); if (currentIndex > 0) { currentIndex--; currentStanceBalance = 50; for(let i=0; i<=currentIndex; i++) currentStanceBalance += (dialogue[i].stance || 0); updateUI(); } };
+            window.onkeydown = (e) => { if(e.code==="Space") { e.preventDefault(); document.getElementById('dialogue-box').click(); } else if(e.code==="ArrowLeft" || e.code==="Backspace") { document.getElementById('btn-prev').click(); } };
+            const texts = document.querySelectorAll('.intro-text');
+            texts.forEach((t, i) => setTimeout(() => t.classList.add('visible'), i * 600 + 300));
+            setTimeout(() => document.getElementById('start-btn').classList.add('visible'), 7 * 600 + 800);
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
