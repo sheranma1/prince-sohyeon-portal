@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/hualeyi/soyheon-combined status)",
+      "Bash(git -C /Users/hualeyi/soyheon-combined remote -v)",
+      "Bash(git *)",
+      "Bash(gh api *)"
+    ]
+  }
+}

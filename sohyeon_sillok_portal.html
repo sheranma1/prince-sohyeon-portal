@@ -117,7 +117,58 @@
         .period-year-large { font-family: 'Playfair Display', serif; font-size: 72px; color: var(--period-color); line-height: 1; margin-bottom: 15px; }
         .period-event-name { font-size: 32px; font-weight: 700; color: var(--text-main); }
         .page-header h1 { margin-bottom: 8px; font-size: 42px; }
-        .page-subtitle { color: var(--accent-gold); font-size: 20px; font-style: italic; font-family: 'Noto Serif TC', serif; margin-bottom: 20px; }
+        .page-subtitle { color: var(--accent-gold); font-size: 20px; font-style: italic; font-family: 'Noto Serif TC', serif; margin-bottom: 30px; }
+
+        /* Horizontal Timeline */
+        .timeline-container {
+            margin: 40px 0 50px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(90, 122, 140, 0.08) 0%, rgba(201, 162, 39, 0.05) 100%);
+            border-radius: 15px;
+            border: 1px solid rgba(90, 122, 140, 0.15);
+        }
+
+        .timeline-container h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .timeline-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: flex-start;
+        }
+
+        .timeline-btn {
+            padding: 10px 18px;
+            border-radius: 25px;
+            border: 2px solid #5a7a8c;
+            background: white;
+            color: #5a7a8c;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Noto Serif TC', serif;
+            white-space: nowrap;
+        }
+
+        .timeline-btn:hover {
+            background: rgba(90, 122, 140, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .timeline-btn.active {
+            background: #5a7a8c;
+            color: white;
+            box-shadow: 0 4px 12px rgba(90, 122, 140, 0.3);
+        }
 
         /* Intro box */
         .intro-box {
@@ -247,6 +298,25 @@
 <h1>昭顯世子 · 仁祖大王實錄</h1>
 <div class="page-subtitle">Selected passages from the <em>Annals of King Injo</em> concerning Crown Prince Sohyeon (昭顯世子, 1612–1645)</div>
 </div>
+
+<!-- Timeline Navigation -->
+<div class="timeline-container">
+<h3>時期導航 (Period Index)</h3>
+<div class="timeline-list" id="timeline-list">
+<button class="timeline-btn active" data-period="all">全部時期</button>
+<button class="timeline-btn" data-period="1625" style="color: #c9a227; border-color: #c9a227;">1625 冊封</button>
+<button class="timeline-btn" data-period="1626" style="color: #ca6f1e; border-color: #ca6f1e;">1626 迎使</button>
+<button class="timeline-btn" data-period="1627" style="color: #c0392b; border-color: #c0392b;">1627 胡亂</button>
+<button class="timeline-btn" data-period="1628" style="color: #d35400; border-color: #d35400;">1628 遺事</button>
+<button class="timeline-btn" data-period="1637" style="color: #922b21; border-color: #922b21;">1637 入質</button>
+<button class="timeline-btn" data-period="1638" style="color: #17a589; border-color: #17a589;">1638 在瀋</button>
+<button class="timeline-btn" data-period="1645" style="color: #6c3483; border-color: #6c3483;">1645 歸國</button>
+<button class="timeline-btn" data-period="1646" style="color: #7b241c; border-color: #7b241c;">1646 姜嬪之獄</button>
+<button class="timeline-btn" data-period="1647" style="color: #2c3e50; border-color: #2c3e50;">1647 三子流配</button>
+<button class="timeline-btn" data-period="附錄" style="color: #7f8c8d; border-color: #7f8c8d;">附錄 傳記</button>
+</div>
+</div>
+
 <div class="intro-box">
 <p>昭顯世子（1612–1645），名□，字成之，朝鮮第十六代王仁祖之長子，元妃韓氏所出。仁祖三年（1625）冊立為王世子，時年十四歲。仁祖十五年（1637）丙子胡亂後，作為人質赴清朝瀋陽，滯留長達八年。仁祖二十三年（1645）春歸國，數月後薨逝於昌慶宮，年三十四，謚曰昭顯。</p>
 <p style="font-size:13px;color:#bbb;margin-bottom:10px;">In the Sillok, the Crown Prince is referred to as 王世子 or 世子 during his lifetime. The posthumous title 昭顯 was conferred in the fifth month of 仁祖 23年 (1645).</p>
@@ -1241,6 +1311,10 @@
             document.querySelectorAll('.period-nav-list button').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.period === activePeriod);
             });
+            // Update timeline buttons
+            document.querySelectorAll('.timeline-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.period === activePeriod);
+            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -1254,6 +1328,15 @@
                     update();
                     updateSidebar();
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+
+            // Timeline navigation buttons
+            document.querySelectorAll('.timeline-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activePeriod = btn.dataset.period;
+                    update();
+                    updateSidebar();
                 });
             });
 
