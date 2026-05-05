@@ -395,108 +395,6 @@
                 </div>
             </div>
 
-            <!-- Royal Family Tree Section -->
-            <div style="margin-top: 60px; padding: 40px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <h2 style="color: #2c3e50; margin-bottom: 30px; font-size: 28px; text-align: center; font-family: 'Playfair Display', 'Georgia', serif;">Chosŏn Royal Family Tree (宣祖 to 肅宗)</h2>
-
-                <svg viewBox="0 0 1200 700" style="width: 100%; height: auto; max-width: 100%;">
-                    <!-- Define styles -->
-                    <defs>
-                        <style>
-                            .royal-node { cursor: pointer; transition: all 0.3s ease; }
-                            .royal-node:hover circle { r: 28; filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.6)); }
-                            .royal-node:hover text { font-weight: bold; font-size: 14px; }
-                            .connector { stroke: #5a7a8c; stroke-width: 2; fill: none; }
-                            .monarch { fill: #667eea; }
-                            .crown-prince { fill: #764ba2; }
-                            .prince { fill: #5a7a8c; }
-                            .text-label { font-family: 'Georgia', serif; font-size: 12px; fill: #333; text-anchor: middle; }
-                        </style>
-                    </defs>
-
-                    <!-- Generation 1: 宣祖 -->
-                    <g class="royal-node" onclick="showInfo('宣祖', '1552-1608')">
-                        <circle cx="600" cy="50" r="25" class="monarch"/>
-                        <text x="600" y="58" class="text-label">宣祖</text>
-                    </g>
-
-                    <!-- Connectors from 宣祖 -->
-                    <line x1="600" y1="75" x2="350" y2="120" class="connector"/>
-                    <line x1="600" y1="75" x2="850" y2="120" class="connector"/>
-
-                    <!-- Generation 2: 光海君 and 仁祖 -->
-                    <g class="royal-node" onclick="showInfo('光海君', '1575-1641')">
-                        <circle cx="350" cy="150" r="25" class="prince"/>
-                        <text x="350" y="158" class="text-label">光海君</text>
-                    </g>
-
-                    <g class="royal-node" onclick="showInfo('仁祖', '1595-1649')">
-                        <circle cx="850" cy="150" r="25" class="monarch"/>
-                        <text x="850" y="158" class="text-label">仁祖</text>
-                    </g>
-
-                    <!-- Connectors from 仁祖 to his sons -->
-                    <line x1="850" y1="175" x2="550" y2="220" class="connector"/>
-                    <line x1="850" y1="175" x2="750" y2="220" class="connector"/>
-                    <line x1="850" y1="175" x2="950" y2="220" class="connector"/>
-
-                    <!-- Generation 3: 昭顯世子, 鳳林大君, 麟坪大君 -->
-                    <g class="royal-node" onclick="showInfo('昭顯世子', '1612-1645')">
-                        <circle cx="550" cy="250" r="25" class="crown-prince"/>
-                        <text x="550" y="258" class="text-label">昭顯世子</text>
-                    </g>
-
-                    <g class="royal-node" onclick="showInfo('鳳林大君', '1619-1662')">
-                        <circle cx="750" cy="250" r="25" class="prince"/>
-                        <text x="750" y="258" class="text-label">鳳林大君</text>
-                    </g>
-
-                    <g class="royal-node" onclick="showInfo('麟坪大君', '1622-1688')">
-                        <circle cx="950" cy="250" r="25" class="prince"/>
-                        <text x="950" y="258" class="text-label">麟坪大君</text>
-                    </g>
-
-                    <!-- Connector from 昭顯世子 to 孝宗 -->
-                    <line x1="550" y1="275" x2="550" y2="320" class="connector"/>
-
-                    <!-- Connectors from 麟坪大君 to his sons -->
-                    <line x1="950" y1="275" x2="850" y2="320" class="connector"/>
-                    <line x1="950" y1="275" x2="1050" y2="320" class="connector"/>
-
-                    <!-- Generation 4: 孝宗, 顯宗, 肅宗 -->
-                    <g class="royal-node" onclick="showInfo('孝宗', '1641-1674')">
-                        <circle cx="550" cy="350" r="25" class="crown-prince"/>
-                        <text x="550" y="358" class="text-label">孝宗</text>
-                    </g>
-
-                    <g class="royal-node" onclick="showInfo('顯宗', '1641-1674')">
-                        <circle cx="850" cy="350" r="25" class="monarch"/>
-                        <text x="850" y="358" class="text-label">顯宗</text>
-                    </g>
-
-                    <g class="royal-node" onclick="showInfo('肅宗', '1661-1720')">
-                        <circle cx="1050" cy="350" r="25" class="monarch"/>
-                        <text x="1050" y="358" class="text-label">肅宗</text>
-                    </g>
-
-                    <!-- Legend -->
-                    <g style="font-size: 11px;">
-                        <circle cx="100" cy="550" r="12" class="monarch"/>
-                        <text x="120" y="555" class="text-label" style="text-anchor: start;">King</text>
-
-                        <circle cx="100" cy="580" r="12" class="crown-prince"/>
-                        <text x="120" y="585" class="text-label" style="text-anchor: start;">Crown Prince</text>
-
-                        <circle cx="100" cy="610" r="12" class="prince"/>
-                        <text x="120" y="615" class="text-label" style="text-anchor: start;">Prince</text>
-                    </g>
-                </svg>
-
-                <div id="info-box" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-left: 4px solid #667eea; border-radius: 4px; display: none;">
-                    <p style="margin: 0; color: #2c3e50; font-weight: bold;" id="info-name"></p>
-                    <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;" id="info-dates"></p>
-                </div>
-            </div>
 
         </div>
 
@@ -886,16 +784,6 @@
     </footer>
 
     <script>
-        // Global function for family tree info display
-        function showInfo(name, dates) {
-            const infoBox = document.getElementById('info-box');
-            if (infoBox) {
-                document.getElementById('info-name').textContent = name;
-                document.getElementById('info-dates').textContent = dates;
-                infoBox.style.display = 'block';
-            }
-        }
-
         function showPage(pageId) {
             // Hide all pages
             const pages = document.querySelectorAll('.page');
